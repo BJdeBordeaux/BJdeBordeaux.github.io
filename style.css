@@ -1,0 +1,305 @@
+/* =========================================
+   junji blog — airy, light, alive
+   ========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Noto+Sans+SC:wght@300;400&display=swap');
+
+/* ── Variables ──────────────────────────── */
+:root {
+  --bg:        #f8f7f4;
+  --card:      #ffffff;
+  --border:    #e8e4dc;
+  --accent:    #9ab5a0;   /* muted sage green */
+  --accent2:   #b8a9c4;  /* soft lavender for a second voice */
+  --text:      #3a3835;
+  --muted:     #8a8780;
+  --shadow:     0 2px 20px rgba(0,0,0,0.05);
+  --radius:    14px;
+  --font-head: 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --max-w:     720px;
+}
+
+/* ── Reset ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.85;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Scrollbar ──────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ── Layout ─────────────────────────────── */
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 28px;
+  width: 100%;
+}
+
+/* ── Header ──────────────────────────────── */
+header {
+  padding: 72px 0 56px;
+  text-align: center;
+}
+
+header .site-title {
+  font-family: var(--font-head);
+  font-size: 1.9rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  text-decoration: none;
+  display: inline-block;
+}
+
+header .site-title span {
+  color: var(--accent);
+}
+
+header .tagline {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+}
+
+/* ── Divider ────────────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border), transparent);
+  margin: 0 auto 56px;
+  max-width: 160px;
+}
+
+/* ── Article list ───────────────────────── */
+.article-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-bottom: 100px;
+}
+
+.article-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 40px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.article-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(to right, var(--accent), var(--accent2));
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.article-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 36px rgba(0,0,0,0.08);
+  border-color: var(--accent);
+}
+
+.article-card:hover::before {
+  opacity: 1;
+}
+
+.article-card .card-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.article-card .card-tag {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.article-card .card-date {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.article-card h2 {
+  font-family: var(--font-head);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+
+.article-card .card-excerpt {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.75;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.article-card .card-read {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.article-card:hover .card-read {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Article page ───────────────────────── */
+.article-page {
+  padding: 64px 0 120px;
+}
+
+.article-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  margin-bottom: 52px;
+  transition: color 0.2s;
+}
+
+.article-back:hover { color: var(--accent); }
+
+.article-header {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-header h1 {
+  font-family: var(--font-head);
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.article-header .article-meta {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.article-header .meta-tag {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.article-header .meta-date {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* ── Article body ───────────────────────── */
+.article-body {
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  line-height: 2;
+  color: var(--text);
+}
+
+.article-body p {
+  margin-bottom: 1.4em;
+}
+
+.article-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5em auto;
+  width: 60%;
+}
+
+.article-body strong {
+  font-weight: 600;
+}
+
+.article-body blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1.2em;
+  color: var(--muted);
+  margin: 1.6em 0;
+  font-style: italic;
+}
+
+.article-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Entrance animation ─────────────────── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.fade-up:nth-child(2) { animation-delay: 0.12s; }
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Footer ─────────────────────────────── */
+footer {
+  margin-top: auto;
+  padding: 40px 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 600px) {
+  .container { padding: 0 20px; }
+  header { padding: 52px 0 40px; }
+  .article-card { padding: 28px 24px; }
+  .article-header h1 { font-size: 1.6rem; }
+}
