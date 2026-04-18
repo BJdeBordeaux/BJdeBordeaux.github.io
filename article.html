@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">加载中… · Junji</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <a href="index.html" class="site-title">Junji<span>·</span>写东西的地方</a>
+      <p class="tagline">大巴黎 · 程序员 · 偶尔写写</p>
+    </div>
+  </header>
+
+  <div class="divider"></div>
+
+  <main class="container">
+    <article class="article-page">
+
+      <a href="index.html" class="article-back">← 返回首页</a>
+
+      <header class="article-header">
+        <h1 id="articleTitle">加载中…</h1>
+        <div class="article-meta">
+          <span class="meta-tag" id="articleTag">—</span>
+          <span class="meta-date" id="articleDate">—</span>
+        </div>
+      </header>
+
+      <div class="article-body" id="articleBody">
+        <p style="color:var(--muted)">正在加载…</p>
+      </div>
+
+      <!-- Share -->
+      <div class="share-section">
+        <p class="share-label">转发给朋友</p>
+        <div class="share-btns">
+          <button class="share-btn share-native" id="shareNative" title="分享">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            分享
+          </button>
+          <a class="share-btn share-wechat" href="weixin://" title="打开微信">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.5 11.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm7 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM20 5c-2.76 0-5 2.24-5 5 0 1.83.99 3.44 2.46 4.32L15 19l3.37-2.69c.4.08.83.14 1.28.14 2.76 0 5-2.24 5-5s-2.24-5-5-5zm-8.5 9.5C9.93 14.5 9 13.38 9 12s.93-2.5 2.5-2.5S14 10.62 14 12s-.93 2.5-2.5 2.5z"/></svg>
+            微信
+          </a>
+          <button class="share-btn share-copy" id="shareCopy" title="复制链接">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            复制链接
+          </button>
+        </div>
+        <div class="share-toast" id="shareToast">链接已复制</div>
+      </div>
+
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      © 2026 Junji · 写得随意，读得开心
+    </div>
+  </footer>
+
+  <!-- marked.js for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- DOMPurify for sanitization -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+
+  <script>
+    (function() {
+      const params = new URLSearchParams(location.search);
+      const file = params.get('file');
+
+      if (!file) {
+        document.getElementById('articleBody').innerHTML = '<p style="color:#e55;">缺少文件参数，<a href="index.html">返回首页</a></p>';
+        return;
+      }
+
+      // article.html?file=xxx  ->  articles/xxx.md
+      const mdFile = 'articles/' + decodeURIComponent(file) + '.md';
+
+      fetch(mdFile)
+        .then(r => {
+          if (!r.ok) throw new Error('文件不存在');
+          return r.text();
+        })
+        .then(text => {
+          // Strip YAML front-matter: everything before the first ---
+          let content = text;
+          if (content.startsWith('---')) {
+            const end = content.indexOf('---', 3);
+            if (end !== -1) {
+              const yaml = content.slice(3, end).trim();
+              content = content.slice(end + 3).trim();
+
+              // Parse simple YAML (title / tag / date)
+              yaml.split('\n').forEach(line => {
+                const [key, ...vals] = line.split(':');
+                const val = vals.join(':').trim();
+                if (key === 'title') {
+                  document.getElementById('articleTitle').textContent = val;
+                  document.getElementById('pageTitle').textContent = val + ' · Junji';
+                }
+                if (key === 'tag')  document.getElementById('articleTag').textContent  = val;
+                if (key === 'date') document.getElementById('articleDate').textContent = val;
+              });
+            }
+          }
+
+          // Render Markdown
+          const html = DOMPurify.sanitize(marked.parse(content));
+          document.getElementById('articleBody').innerHTML = html;
+        })
+        .catch(() => {
+          document.getElementById('articleBody').innerHTML =
+            '<p style="color:#e55;">文章加载失败，<a href="index.html">返回首页</a></p>';
+        });
+    })();
+
+    // Share buttons
+    const articleTitle = document.getElementById('pageTitle').textContent.replace(' · Junji', '');
+    const articleUrl   = location.href;
+
+    document.getElementById('shareNative').addEventListener('click', async () => {
+      if (navigator.share) {
+        try { await navigator.share({ title: articleTitle, url: articleUrl }); } catch(e) {}
+      } else {
+        copyLink();
+      }
+    });
+
+    document.getElementById('shareCopy').addEventListener('click', copyLink);
+
+    function copyLink() {
+      navigator.clipboard.writeText(articleUrl).then(() => showToast()).catch(() => {
+        prompt('复制链接：', articleUrl);
+      });
+    }
+
+    function showToast() {
+      const t = document.getElementById('shareToast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+  </script>
+
+</body>
+</html>
