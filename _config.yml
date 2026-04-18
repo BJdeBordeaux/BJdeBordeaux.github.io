@@ -1,0 +1,16 @@
+# 告诉 Jekyll 完全忽略这些文件/目录
+# 我们用 generate_article.py 生成静态 HTML，不需要 Jekyll
+exclude:
+  - articles/
+  - _layouts/
+  - _includes/
+  - _config.yml
+  - generate_article.py
+  - README.md
+  - package.json
+  - node_modules/
+  - _config.local.yml
+
+# 不使用任何主题，纯静态
+theme: ""
+plugins: []
