@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title id="pageTitle">加载中… · Junji</title>
+
+  <!-- Open Graph / 微信分享卡片 -->
+  <meta property="og:title"       id="ogTitle"       content="">
+  <meta property="og:description" id="ogDesc"        content="">
+  <meta property="og:image"       id="ogImage"       content="">
+  <meta property="og:url"         id="ogUrl"         content="">
+  <meta property="og:type"        content="article">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       id="twTitle"       content="">
+  <meta name="twitter:description" id="twDesc"        content="">
+  <meta name="twitter:image"       id="twImage"       content="">
+
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 </head>
@@ -72,15 +86,19 @@
   <script>
     (function() {
       const params = new URLSearchParams(location.search);
-      const file = params.get('file');
+      const file   = params.get('file');
+      const siteBase = location.protocol + '//' + location.host;
 
       if (!file) {
         document.getElementById('articleBody').innerHTML = '<p style="color:#e55;">缺少文件参数，<a href="index.html">返回首页</a></p>';
         return;
       }
 
-      // article.html?file=xxx  ->  articles/xxx.md
-      const mdFile = 'articles/' + decodeURIComponent(file) + '.md';
+      const mdFile   = 'articles/' + decodeURIComponent(file) + '.md';
+      const pageUrl = siteBase + '/article.html?file=' + encodeURIComponent(file);
+
+      // Pre-set og:url immediately so crawlers see it
+      document.getElementById('ogUrl').content = pageUrl;
 
       fetch(mdFile)
         .then(r => {
@@ -88,31 +106,75 @@
           return r.text();
         })
         .then(text => {
-          // Strip YAML front-matter: everything before the first ---
           let content = text;
+          let meta    = {};
+
+          // ── YAML front-matter ─────────────────────────────────
           if (content.startsWith('---')) {
             const end = content.indexOf('---', 3);
             if (end !== -1) {
-              const yaml = content.slice(3, end).trim();
-              content = content.slice(end + 3).trim();
+              const yaml   = content.slice(3, end).trim();
+              content      = content.slice(end + 3).trim();
 
-              // Parse simple YAML (title / tag / date)
               yaml.split('\n').forEach(line => {
-                const [key, ...vals] = line.split(':');
-                const val = vals.join(':').trim();
-                if (key === 'title') {
-                  document.getElementById('articleTitle').textContent = val;
-                  document.getElementById('pageTitle').textContent = val + ' · Junji';
-                }
-                if (key === 'tag')  document.getElementById('articleTag').textContent  = val;
-                if (key === 'date') document.getElementById('articleDate').textContent = val;
+                const colon = line.indexOf(':');
+                if (colon === -1) return;
+                const key = line.slice(0, colon).trim();
+                const val = line.slice(colon + 1).trim();
+                meta[key] = val;
               });
             }
           }
 
-          // Render Markdown
+          // ── First image from Markdown ─────────────────────────
+          let ogImage = siteBase + '/images/default-cover.jpg';
+          const imgMatch = content.match(/!\[.*?\]\((.*?)\)/);
+          if (imgMatch) {
+            const src = imgMatch[1].trim();
+            if (src.startsWith('http://') || src.startsWith('https://')) {
+              ogImage = src;
+            } else {
+              ogImage = siteBase + '/' + src.replace(/^\//, '');
+            }
+          }
+          // Override with explicit image in front-matter if set
+          if (meta.image) {
+            const explicit = meta.image.trim();
+            if (explicit.startsWith('http')) {
+              ogImage = explicit;
+            } else {
+              ogImage = siteBase + '/' + explicit.replace(/^\//, '');
+            }
+          }
+
+          const title = meta.title    || '无标题';
+          const desc  = meta.desc     || meta.description || '';
+          const tag   = meta.tag      || '';
+          const date  = meta.date     || '';
+
+          // ── Set page title & headings ────────────────────────
+          document.getElementById('pageTitle').textContent    = title + ' · Junji';
+          document.getElementById('articleTitle').textContent = title;
+          document.getElementById('articleTag').textContent   = tag;
+          document.getElementById('articleDate').textContent = date;
+
+          // ── Set OG / Twitter Card meta tags ───────────────────
+          document.getElementById('ogTitle').content  = title;
+          document.getElementById('ogDesc').content   = desc;
+          document.getElementById('ogImage').content  = ogImage;
+          document.getElementById('twTitle').content  = title;
+          document.getElementById('twDesc').content   = desc;
+          document.getElementById('twImage').content  = ogImage;
+
+          // Also update document.title for consistency
+          document.title = title + ' · Junji';
+
+          // ── Render Markdown body ──────────────────────────────
           const html = DOMPurify.sanitize(marked.parse(content));
           document.getElementById('articleBody').innerHTML = html;
+
+          // ── Update share buttons with resolved title ───────────
+          initShare(title);
         })
         .catch(() => {
           document.getElementById('articleBody').innerHTML =
@@ -120,30 +182,26 @@
         });
     })();
 
-    // Share buttons
-    const articleTitle = document.getElementById('pageTitle').textContent.replace(' · Junji', '');
-    const articleUrl   = location.href;
-
-    document.getElementById('shareNative').addEventListener('click', async () => {
-      if (navigator.share) {
-        try { await navigator.share({ title: articleTitle, url: articleUrl }); } catch(e) {}
-      } else {
-        copyLink();
-      }
-    });
-
-    document.getElementById('shareCopy').addEventListener('click', copyLink);
-
-    function copyLink() {
-      navigator.clipboard.writeText(articleUrl).then(() => showToast()).catch(() => {
-        prompt('复制链接：', articleUrl);
+    function initShare(title) {
+      const articleUrl = location.href;
+      document.getElementById('shareNative').addEventListener('click', async () => {
+        if (navigator.share) {
+          try { await navigator.share({ title, url: articleUrl }); } catch(e) {}
+        } else {
+          copyLink();
+        }
       });
-    }
-
-    function showToast() {
-      const t = document.getElementById('shareToast');
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2000);
+      document.getElementById('shareCopy').addEventListener('click', copyLink);
+      function copyLink() {
+        navigator.clipboard.writeText(articleUrl).then(() => showToast()).catch(() => {
+          prompt('复制链接：', articleUrl);
+        });
+      }
+      function showToast() {
+        const t = document.getElementById('shareToast');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+      }
     }
   </script>
 
