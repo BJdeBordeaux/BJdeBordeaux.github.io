@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys; sys.stdout.reconfigure(encoding='utf-8')
 """
 生成静态文章页（og:image 直接写入 HTML，微信分享正常显示）
 用法: python generate_article.py "文章标题"
