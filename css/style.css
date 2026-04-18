@@ -296,6 +296,76 @@ footer {
   letter-spacing: 0.06em;
 }
 
+/* ── Share ─────────────────────────────── */
+.share-section {
+  margin-top: 64px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+.share-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+
+.share-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  font-weight: 300;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  border: none;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.share-native {
+  background: var(--accent);
+  color: #fff;
+}
+
+.share-wechat {
+  background: #07c160;
+  color: #fff;
+}
+
+.share-copy {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.share-toast {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.share-toast.show {
+  opacity: 1;
+}
+
 /* ── Responsive ──────────────────────────── */
 @media (max-width: 600px) {
   .container { padding: 0 20px; }

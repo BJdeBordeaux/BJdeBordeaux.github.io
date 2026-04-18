@@ -74,6 +74,27 @@
         <p>真好啊，就这么感受这世界。</p>
 
       </div>
+
+      <!-- Share -->
+      <div class="share-section">
+        <p class="share-label">转发给朋友</p>
+        <div class="share-btns">
+          <button class="share-btn share-native" id="shareNative" title="分享">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            分享
+          </button>
+          <a class="share-btn share-wechat" href="weixin://" title="打开微信">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8.5 11.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm7 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM20 5c-2.76 0-5 2.24-5 5 0 1.83.99 3.44 2.46 4.32L15 19l3.37-2.69c.4.08.83.14 1.28.14 2.76 0 5-2.24 5-5s-2.24-5-5-5zm-8.5 9.5C9.93 14.5 9 13.38 9 12s.93-2.5 2.5-2.5S14 10.62 14 12s-.93 2.5-2.5 2.5z"/></svg>
+            微信
+          </a>
+          <button class="share-btn share-copy" id="shareCopy" title="复制链接">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            复制链接
+          </button>
+        </div>
+        <div class="share-toast" id="shareToast">链接已复制</div>
+      </div>
+
     </article>
   </main>
 
@@ -82,6 +103,37 @@
       © 2026 Junji · 写得随意，读得开心
     </div>
   </footer>
+
+  <script>
+    const articleTitle = document.title.replace(' · Junji', '');
+    const articleUrl = location.href;
+
+    document.getElementById('shareNative').addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: articleTitle, url: articleUrl });
+        } catch (e) {}
+      } else {
+        copyLink();
+      }
+    });
+
+    document.getElementById('shareCopy').addEventListener('click', copyLink);
+
+    function copyLink() {
+      navigator.clipboard.writeText(articleUrl).then(() => {
+        showToast();
+      }).catch(() => {
+        prompt('复制链接：', articleUrl);
+      });
+    }
+
+    function showToast() {
+      const t = document.getElementById('shareToast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+  </script>
 
 </body>
 </html>
