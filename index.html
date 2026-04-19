@@ -19,10 +19,19 @@
   <div class="divider"></div>
 
   <main class="container">
-    <div class="article-list">
+
+    <!-- Category filter -->
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-filter="全部">全部</button>
+      <button class="filter-btn" data-filter="修行">修行</button>
+      <button class="filter-btn" data-filter="心理">心理</button>
+      <button class="filter-btn" data-filter="观点">观点</button>
+    </div>
+
+    <div class="article-list" id="articleList">
 
       <!-- Article 2 (newer) -->
-      <a href="articles/发现我不存在之后.html" class="article-card fade-up">
+      <a href="articles/发现我不存在之后.html" class="article-card fade-up" data-tag="心理">
         <div class="card-meta">
           <span class="card-tag">心理</span>
           <span class="card-date">2026年4月</span>
@@ -35,7 +44,7 @@
       </a>
 
       <!-- Article 1 (older) -->
-      <a href="articles/完美生活的决定.html" class="article-card fade-up">
+      <a href="articles/完美生活的决定.html" class="article-card fade-up" data-tag="心理">
         <div class="card-meta">
           <span class="card-tag">心理</span>
           <span class="card-date">2026年4月</span>
@@ -49,6 +58,32 @@
 
     </div>
   </main>
+
+  <script>
+    (function () {
+      const btns = document.querySelectorAll('.filter-btn');
+      const cards = document.querySelectorAll('.article-card');
+
+      btns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const filter = btn.dataset.filter;
+
+          // toggle active
+          btns.forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+
+          // show / hide cards
+          cards.forEach(function (card) {
+            if (filter === '全部' || card.dataset.tag === filter) {
+              card.style.display = '';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+    })();
+  </script>
 
   <footer>
     <div class="container">
