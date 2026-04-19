@@ -90,36 +90,43 @@ header .tagline {
 /* ── Filter bar ─────────────────────────── */
 .filter-bar {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 36px;
-  margin-top: 8px;
+  margin-bottom: 40px;
+  margin-top: 4px;
+  padding: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  width: fit-content;
+  box-shadow: var(--shadow);
 }
 
 .filter-btn {
-  padding: 7px 18px;
+  padding: 7px 22px;
   border-radius: 99px;
-  border: 1px solid var(--border);
-  background: var(--card);
+  border: none;
+  background: transparent;
   color: var(--muted);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 300;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  transition: background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease, transform 0.15s ease;
+  position: relative;
 }
 
-.filter-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: translateY(-1px);
+.filter-btn:hover:not(.active) {
+  color: var(--text);
+  background: rgba(154, 181, 160, 0.1);
 }
 
 .filter-btn.active {
   background: var(--accent);
   color: #fff;
-  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(154, 181, 160, 0.45);
+  transform: none;
 }
 
 /* ── Article list ───────────────────────── */
@@ -407,4 +414,6 @@ footer {
   header { padding: 52px 0 40px; }
   .article-card { padding: 28px 24px; }
   .article-header h1 { font-size: 1.6rem; }
+  .filter-bar { padding: 5px; gap: 4px; }
+  .filter-btn { padding: 6px 16px; font-size: 0.75rem; }
 }
