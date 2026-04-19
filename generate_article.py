@@ -62,16 +62,19 @@ def render_markdown(body):
     i = 0
     while i < len(lines):
         line = lines[i]
+
         # hr
         if re.match(r'^(-{3,}|\*{3,}|_{3,})$', line.strip()):
             html_parts.append('<hr>')
             i += 1
             continue
+
         # blockquote
         if line.strip().startswith('>'):
             html_parts.append('<blockquote>' + html.escape(line.lstrip('>').strip()) + '</blockquote>')
             i += 1
             continue
+
         # heading
         hm = re.match(r'^(#{1,6})\s+(.*)', line)
         if hm:
@@ -79,6 +82,47 @@ def render_markdown(body):
             html_parts.append(f'<h{level}>{render_inline(hm.group(2))}</h{level}>')
             i += 1
             continue
+
+        # image with caption: ![alt](src) followed by *caption*
+        img_match = re.match(r'^!\[(.*?)\]\((.*?)\)\s*$', line.strip())
+        if img_match and i + 1 < len(lines):
+            next_line = lines[i + 1].strip()
+            # next line is italic → treat as caption
+            cap_match = re.match(r'^\*(.*?)\*\s*$', next_line)
+            if cap_match:
+                alt   = html.escape(cap_match.group(1))
+                src   = img_match.group(2)
+                img_html = (
+                    f'<figure class="article-figure">'
+                    f'<img src="{src}" alt="{html.escape(img_match.group(1))}" loading="lazy">'
+                    f'<figcaption>{alt}</figcaption>'
+                    f'</figure>'
+                )
+                html_parts.append(img_html)
+                i += 2
+                continue
+            # no caption follows → plain image
+            img_html = (
+                f'<img src="{img_match.group(2)}" '
+                f'alt="{html.escape(img_match.group(1))}" '
+                f'class="article-img" loading="lazy">'
+            )
+            html_parts.append(img_html)
+            i += 1
+            continue
+
+        # standalone image (no caption)
+        img_match = re.match(r'^!\[(.*?)\]\((.*?)\)\s*$', line.strip())
+        if img_match:
+            img_html = (
+                f'<img src="{img_match.group(2)}" '
+                f'alt="{html.escape(img_match.group(1))}" '
+                f'class="article-img" loading="lazy">'
+            )
+            html_parts.append(img_html)
+            i += 1
+            continue
+
         # paragraph
         if line.strip():
             html_parts.append(f'<p>{render_inline(line)}</p>')

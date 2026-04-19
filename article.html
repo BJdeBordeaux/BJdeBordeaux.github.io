@@ -36,6 +36,14 @@
   <div class="divider"></div>
 
   <main class="container">
+    <!-- Font size control -->
+    <div class="font-ctrl">
+      <span class="font-ctrl-label">字号</span>
+      <button class="font-btn" data-size="sm" title="小">A</button>
+      <button class="font-btn active" data-size="md" title="中">A</button>
+      <button class="font-btn" data-size="lg" title="大">A</button>
+    </div>
+
     <article class="article-page">
 
       <a href="index.html" class="article-back">← 返回首页</a>
@@ -177,12 +185,29 @@
     })();
 
     function initShare(title) {
-      const articleUrl = location.href;
+      // Font size control
+      var btns = document.querySelectorAll('.font-btn');
+      function applySize(size) {
+        document.body.dataset.fontSize = size;
+        btns.forEach(function(b) {
+          b.classList.toggle('active', b.dataset.size === size);
+        });
+        try { localStorage.setItem('articleFontSize', size); } catch(e) {}
+      }
+      btns.forEach(function(btn) {
+        btn.addEventListener('click', function() { applySize(btn.dataset.size); });
+      });
+      try {
+        var saved = localStorage.getItem('articleFontSize');
+        if (saved) applySize(saved);
+      } catch(e) {}
+
+      // Share
       document.getElementById('shareNative').addEventListener('click', async () => {
         if (navigator.share) {
-          try { await navigator.share({ title, url: articleUrl }); } catch(e) {}
+          try { await navigator.share({ title, url: location.href }); } catch(e) {}
         } else {
-          navigator.clipboard.writeText(articleUrl);
+          navigator.clipboard.writeText(location.href);
         }
       });
     }
