@@ -20,6 +20,20 @@
 
   <main class="container">
 
+    <!-- Search bar -->
+    <div class="search-wrap">
+      <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input
+        id="searchInput"
+        class="search-input"
+        type="text"
+        placeholder="搜索标题、内容或标签…"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <button class="search-clear" id="searchClear" aria-label="清除搜索">×</button>
+    </div>
+
     <!-- Category filter -->
     <div class="filter-bar" id="filterBar">
       <button class="filter-btn active" data-filter="全部">全部</button>
@@ -29,7 +43,7 @@
     <div class="article-list" id="articleList">
 
       <!-- Article 2 (newer) -->
-      <a href="articles/发现我不存在之后.html" class="article-card fade-up" data-tag="心理">
+      <a href="articles/发现我不存在之后.html" class="article-card fade-up" data-tag="心理" data-title="发现我不存在之后" data-content="不存在的人，不需要担心得失，不需要担心荣辱，甚至不需要担心生死。真好啊，就这么感受这世界。">
         <div class="card-meta">
           <span class="card-tag">心理</span>
           <span class="card-date">2026年4月</span>
@@ -42,7 +56,7 @@
       </a>
 
       <!-- Article 1 (older) -->
-      <a href="articles/完美生活的决定.html" class="article-card fade-up" data-tag="心理">
+      <a href="articles/完美生活的决定.html" class="article-card fade-up" data-tag="心理" data-title="完美生活的决定" data-content="完美的生活，不是一个目的地，而是一个决定——决定当下就是。">
         <div class="card-meta">
           <span class="card-tag">心理</span>
           <span class="card-date">2026年4月</span>
@@ -55,30 +69,61 @@
       </a>
 
     </div>
+
+    <p class="search-empty" id="searchEmpty">没有找到相关文章</p>
   </main>
 
   <script>
     (function () {
-      const btns = document.querySelectorAll('.filter-btn');
-      const cards = document.querySelectorAll('.article-card');
+      const btns     = document.querySelectorAll('.filter-btn');
+      const cards    = document.querySelectorAll('.article-card');
+      const searchIn = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('searchClear');
+      const emptyMsg = document.getElementById('searchEmpty');
+
+      let currentTag = '全部';
+      let currentQ   = '';
+
+      function filterCards() {
+        let visible = 0;
+        cards.forEach(function (card) {
+          const matchTag = currentTag === '全部' || card.dataset.tag === currentTag;
+          const q = currentQ.trim();
+          const matchQ = !q
+            || card.dataset.title.includes(q)
+            || card.dataset.content.includes(q)
+            || card.dataset.tag.includes(q);
+          if (matchTag && matchQ) {
+            card.style.display = '';
+            visible++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        emptyMsg.style.display = visible === 0 ? 'block' : 'none';
+      }
 
       btns.forEach(function (btn) {
         btn.addEventListener('click', function () {
-          const filter = btn.dataset.filter;
-
-          // toggle active
           btns.forEach(function (b) { b.classList.remove('active'); });
           btn.classList.add('active');
-
-          // show / hide cards
-          cards.forEach(function (card) {
-            if (filter === '全部' || card.dataset.tag === filter) {
-              card.style.display = '';
-            } else {
-              card.style.display = 'none';
-            }
-          });
+          currentTag = btn.dataset.filter;
+          filterCards();
         });
+      });
+
+      searchIn.addEventListener('input', function () {
+        currentQ = searchIn.value;
+        clearBtn.style.display = currentQ ? 'flex' : 'none';
+        filterCards();
+      });
+
+      clearBtn.addEventListener('click', function () {
+        searchIn.value = '';
+        currentQ = '';
+        clearBtn.style.display = 'none';
+        filterCards();
+        searchIn.focus();
       });
     })();
   </script>
