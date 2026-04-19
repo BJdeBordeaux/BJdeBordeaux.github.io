@@ -46,7 +46,7 @@
 
     <article class="article-page">
 
-      <a href="index.html" class="article-back">← 返回首页</a>
+      <a href="https://bjdebordeaux.github.io/" class="article-back">← 返回首页</a>
 
       <header class="article-header">
         <h1 id="articleTitle">加载中…</h1>
@@ -92,7 +92,7 @@
       const siteBase = location.protocol + '//' + location.host;
 
       if (!file) {
-        document.getElementById('articleBody').innerHTML = '<p style="color:#e55;">缺少文件参数，<a href="index.html">返回首页</a></p>';
+        document.getElementById('articleBody').innerHTML = '<p style="color:#e55;">缺少文件参数，<a href="https://bjdebordeaux.github.io/">返回首页</a></p>';
         return;
       }
 
@@ -180,7 +180,7 @@
         })
         .catch(() => {
           document.getElementById('articleBody').innerHTML =
-            '<p style="color:#e55;">文章加载失败，<a href="index.html">返回首页</a></p>';
+            '<p style="color:#e55;">文章加载失败，<a href="https://bjdebordeaux.github.io/">返回首页</a></p>';
         });
     })();
 

@@ -192,7 +192,7 @@ def build_article_html(meta, body, article_url, filename):
 
   <main class="container">
     <article class="article-page">
-      <a href="index.html" class="article-back">← 返回首页</a>
+      <a href="https://bjdebordeaux.github.io/" class="article-back">← 返回首页</a>
       <header class="article-header">
         <h1>{title}</h1>
         <div class="article-meta">
