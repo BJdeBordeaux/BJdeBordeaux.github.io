@@ -13,6 +13,7 @@
     <div class="container">
       <div class="header-nav">
         <a href="index.html" class="site-title">梁飞飞<span>·</span>写东西的地方</a>
+        <a href="moments.html" class="nav-about">碎碎念</a>
         <a href="about.html" class="nav-about">关于我</a>
       </div>
       <p class="tagline">大巴黎 · 程序员 · 偶尔写写</p>
@@ -23,7 +24,25 @@
 
   <main class="container">
 
+    <!-- Moments preview -->
+    <div class="moments-preview" id="momentsPreview" style="display:none">
+      <div class="moments-preview-label">
+        <span class="moments-preview-dot"></span>碎碎念
+      </div>
+      <a href="moments.html" class="moments-preview-card" id="momentsPreviewCard">
+        <div class="moments-preview-body">
+          <p class="moments-preview-text" id="momentsPreviewText">加载中…</p>
+          <img class="moments-preview-thumb" id="momentsPreviewThumb" src="" alt="" style="display:none">
+        </div>
+        <div class="moments-preview-footer">
+          <time class="moments-preview-time" id="momentsPreviewTime"></time>
+          <span class="moments-preview-more">查看全部 →</span>
+        </div>
+      </a>
+    </div>
+
     <!-- Search bar -->
+
     <div class="search-wrap">
       <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input
@@ -129,6 +148,23 @@
         searchIn.focus();
       });
     })();
+
+    // ── 碎碎念预览 ────────────────────────────
+    fetch('moments.json?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (items) {
+        if (!items || items.length === 0) return;
+        var latest = items[0];
+        document.getElementById('momentsPreviewText').textContent = latest.text;
+        document.getElementById('momentsPreviewTime').textContent = latest.date;
+        if (latest.image) {
+          var thumb = document.getElementById('momentsPreviewThumb');
+          thumb.src = latest.image;
+          thumb.style.display = 'block';
+        }
+        document.getElementById('momentsPreview').style.display = 'block';
+      })
+      .catch(function () {});
   </script>
 
   <footer>
