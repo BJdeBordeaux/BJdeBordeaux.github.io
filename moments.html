@@ -118,12 +118,23 @@
       }
 
       // ── 获取数据 ────────────────────────────────
-      fetch('moments.json?t=' + Date.now())
+      var ts = '?t=' + Date.now();
+      fetch('moments/index.json' + ts)
         .then(function (r) {
-          if (!r.ok) throw new Error('fetch failed');
+          if (!r.ok) throw new Error('index fetch failed');
           return r.json();
         })
-        .then(render)
+        .then(function (files) {
+          if (!files || files.length === 0) { render([]); return; }
+          return Promise.all(files.map(function (f) {
+            return fetch('moments/' + f + ts)
+              .then(function (r) { return r.ok ? r.json() : null; })
+              .catch(function () { return null; });
+          }));
+        })
+        .then(function (items) {
+          render((items || []).filter(Boolean));
+        })
         .catch(function () {
           list.innerHTML = '<p style="color:#e55;text-align:center;padding:40px 0;">加载失败，请刷新重试。</p>';
         });
