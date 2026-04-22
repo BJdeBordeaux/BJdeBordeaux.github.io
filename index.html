@@ -159,7 +159,9 @@
           return fetch('moments/' + files[0] + ts).then(function (r) { return r.ok ? r.json() : Promise.reject(); });
         })
         .then(function (latest) {
-          document.getElementById('momentsPreviewText').textContent = latest.text;
+          // 把多余空行合并，取第一个非空段作为预览文本
+          var previewText = latest.text.split(/\n+/).filter(function (p) { return p.trim().length > 0; }).join(' / ');
+          document.getElementById('momentsPreviewText').textContent = previewText;
           document.getElementById('momentsPreviewTime').textContent = latest.date;
           if (latest.image) {
             var thumb = document.getElementById('momentsPreviewThumb');

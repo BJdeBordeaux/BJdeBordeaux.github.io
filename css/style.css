@@ -946,6 +946,11 @@ footer {
   margin: 0;
   word-break: break-word;
 }
+.moment-text-para + .moment-text-para { margin-top: 1em; }
+
+
+
+
 
 .moment-thumb-wrap {
   margin-top: 12px;

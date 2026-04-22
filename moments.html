@@ -94,7 +94,7 @@
               '<div class="moment-dot"></div>' +
               '<div class="moment-content">' +
                 '<time class="moment-time">' + item.date + '</time>' +
-                '<p class="moment-text">' + escHtml(item.text) + '</p>' +
+                textToParas(item.text) +
                 imgHtml +
               '</div>' +
             '</div>'
@@ -109,12 +109,21 @@
         });
       }
 
-      function escHtml(str) {
-        return str
+      // 把文本转成段落 HTML：连续多个换行 → 段落分隔，只留一个空行
+      function textToParas(str) {
+        var escaped = str
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/\n/g, '<br>');
+          .replace(/>/g, '&gt;');
+        // 按一个或多个换行切分，过滤掉纯空字符串的段落
+        var paras = escaped.split(/\n+/).filter(function (p) {
+          return p.trim().length > 0;
+        });
+        if (paras.length === 0) return '';
+        if (paras.length === 1) return '<p class="moment-text">' + paras[0] + '</p>';
+        return paras.map(function (p) {
+          return '<p class="moment-text moment-text-para">' + p + '</p>';
+        }).join('');
       }
 
       // ── 获取数据 ────────────────────────────────
