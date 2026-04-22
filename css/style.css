@@ -20,6 +20,18 @@
   --max-w:     720px;
 }
 
+/* ── Dark mode ──────────────────────────── */
+body.dark {
+  --bg:      #1c1b18;
+  --card:    #252420;
+  --border:  #363430;
+  --accent:  #7a9a88;
+  --accent2: #9a8ab0;
+  --text:    #e4e0d8;
+  --muted:   #7a7870;
+  --shadow:  0 2px 20px rgba(0,0,0,0.25);
+}
+
 /* ── Reset ──────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -86,6 +98,23 @@ header .tagline {
   align-items: center;
   gap: 28px;
   margin-bottom: 4px;
+}
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  padding: 4px 9px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+  line-height: 1.5;
+  margin-left: 6px;
+}
+.theme-toggle:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 .nav-about {
