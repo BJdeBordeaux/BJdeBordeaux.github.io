@@ -15,7 +15,7 @@ COMMIT_MSG="${1:-sync: $TIMESTAMP}"
 
 git add -A
 git commit -m "$COMMIT_MSG"
-git push origin main
+git push origin master
 
 echo ""
 echo "Synced successfully at $TIMESTAMP"
