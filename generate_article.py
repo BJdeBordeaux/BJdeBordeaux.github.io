@@ -130,7 +130,7 @@ def render_markdown(body):
     return '\n'.join(html_parts)
 
 def render_inline(text):
-    """Render inline markdown: bold, italic, links, images"""
+    """Render inline markdown: bold, italic, underline, links, images"""
     # image: ![alt](src)
     text = re.sub(r'!\[(.*?)\]\((.*?)\)', r'<img src="\2" alt="\1" style="max-width:100%;border-radius:8px;margin:1em 0;">', text)
     # link: [text](url)
@@ -139,15 +139,18 @@ def render_inline(text):
     text = re.sub(r'\*\*\*(.+?)\*\*\*', r'<strong><em>\1</em></strong>', text)
     # bold
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    # underline: ~~text~~
+    text = re.sub(r'~~(.+?)~~', r'<u>\1</u>', text)
     # italic
     text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
     return text
 
 def build_article_html(meta, body, article_url, filename):
     body_html = render_markdown(body)
-    title = meta.get('title', '无标题')
-    tag   = meta.get('tag', '')
-    date  = meta.get('date', '')
+    title    = meta.get('title', '无标题')
+    subtitle = meta.get('subtitle', '')
+    tag      = meta.get('tag', '')
+    date     = meta.get('date', '')
     desc  = meta.get('desc', meta.get('description', ''))
     og_img = get_og_image(body_html, meta.get('image', ''), filename)
     body_html = render_markdown(body)
@@ -155,6 +158,8 @@ def build_article_html(meta, body, article_url, filename):
     # Escape for JS string
     title_js  = title.replace('\\', '\\\\').replace("'", "\\'").replace('\n', ' ')
     desc_js   = desc.replace('\\', '\\\\').replace("'", "\\'").replace('\n', ' ')
+
+    subtitle_html = ('<p class="article-subtitle">' + html.escape(subtitle) + '</p>') if subtitle else ''
 
     return f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -195,6 +200,7 @@ def build_article_html(meta, body, article_url, filename):
       <a href="https://bjdebordeaux.github.io/" class="article-back">← 返回首页</a>
       <header class="article-header">
         <h1>{title}</h1>
+        {subtitle_html}
         <div class="article-meta">
           <span class="meta-tag">{tag}</span>
           <span class="meta-date">{date}</span>
