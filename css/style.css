@@ -785,6 +785,31 @@ footer {
   color: #fff;
 }
 
+/* ── WeChat QR Code ────────────────────── */
+.wechat-qr-section {
+  margin-top: 48px;
+  padding-top: 36px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.wechat-qr-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.03em;
+}
+
+.wechat-qr-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  display: block;
+  margin: 0 auto;
+}
+
 .share-copy {
   background: var(--card);
   color: var(--text);

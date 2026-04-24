@@ -188,7 +188,7 @@ def build_article_html(meta, body, article_url, filename):
 
   <header>
     <div class="container">
-      <a href="index.html" class="site-title">梁飞飞<span>·</span>写东西的地方</a>
+      <a href="../index.html" class="site-title">梁飞飞<span>·</span>写东西的地方</a>
       <p class="tagline">大巴黎 · 程序员 · 偶尔写写</p>
     </div>
   </header>
@@ -219,6 +219,12 @@ def build_article_html(meta, body, article_url, filename):
             分享
           </button>
         </div>
+      </div>
+
+      <!-- WeChat QR -->
+      <div class="wechat-qr-section">
+        <p class="wechat-qr-label">扫码关注公众号，接收更多内容</p>
+        <img src="../images/wechat-qr.jpg" alt="公众号二维码" class="wechat-qr-img">
       </div>
     </article>
   </main>
