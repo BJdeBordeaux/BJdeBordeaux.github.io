@@ -164,28 +164,56 @@
       });
     })();
 
-    // ── 碎碎念预览 ────────────────────────────
+    // ── 碎碎念预览（取想法和生活记录中最新的那条） ────────────────────────────
     (function () {
       var ts = '?t=' + Date.now();
-      fetch('moments/index.json' + ts)
-        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-        .then(function (files) {
-          if (!files || files.length === 0) return Promise.reject();
-          return fetch('moments/' + files[0] + ts).then(function (r) { return r.ok ? r.json() : Promise.reject(); });
-        })
-        .then(function (latest) {
-          // 把多余空行合并，取第一个非空段作为预览文本
-          var previewText = latest.text.split(/\n+/).filter(function (p) { return p.trim().length > 0; }).join(' / ');
-          document.getElementById('momentsPreviewText').textContent = previewText;
-          document.getElementById('momentsPreviewTime').textContent = latest.date;
-          if (latest.image) {
-            var thumb = document.getElementById('momentsPreviewThumb');
-            thumb.src = latest.image;
-            thumb.style.display = 'block';
-          }
-          document.getElementById('momentsPreview').style.display = 'block';
-        })
-        .catch(function () {});
+
+      // 解析时间戳，用于比较两个条目哪个更新
+      function parseDate(str) {
+        var cleaned = str.replace(/[（(].*[）)]/, '').trim();
+        var parts = cleaned.split(' ');
+        var datePart = parts[0];
+        var timePart = parts[1] || '00:00';
+        var y = parseInt(datePart.split('-')[0]);
+        var m = parseInt(datePart.split('-')[1]) - 1;
+        var d = parseInt(datePart.split('-')[2]);
+        var h = parseInt(timePart.split(':')[0]);
+        var min = parseInt(timePart.split(':')[1]);
+        return new Date(y, m, d, h, min);
+      }
+
+      function fetchLatest(url, file) {
+        return fetch(url + ts)
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (files) {
+            if (!files || files.length === 0) return null;
+            return fetch(file + files[0] + ts)
+              .then(function (r) { return r.ok ? r.json() : null; });
+          });
+      }
+
+      var p1 = fetchLatest('moments/index.json', 'moments/');
+      var p2 = fetchLatest('life/index.json', 'life/');
+
+      Promise.all([p1, p2]).then(function (results) {
+        var candidates = results.filter(Boolean);
+        if (candidates.length === 0) return;
+
+        candidates.sort(function (a, b) {
+          return parseDate(b.date) - parseDate(a.date);
+        });
+
+        var latest = candidates[0];
+        var previewText = latest.text.split(/\n+/).filter(function (p) { return p.trim().length > 0; }).join(' / ');
+        document.getElementById('momentsPreviewText').textContent = previewText;
+        document.getElementById('momentsPreviewTime').textContent = latest.date;
+        if (latest.image) {
+          var thumb = document.getElementById('momentsPreviewThumb');
+          thumb.src = latest.image;
+          thumb.style.display = 'block';
+        }
+        document.getElementById('momentsPreview').style.display = 'block';
+      }).catch(function () {});
     })();
 
     // ── 深色模式 ─────────────────────────────
