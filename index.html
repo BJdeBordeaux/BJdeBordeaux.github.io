@@ -183,16 +183,20 @@
 
       // 解析时间戳，用于比较两个条目哪个更新
       function parseDate(str) {
-        var cleaned = str.replace(/[（(].*[）)]/, '').trim();
-        var parts = cleaned.split(' ');
-        var datePart = parts[0];
-        var timePart = parts[1] || '00:00';
-        var y = parseInt(datePart.split('-')[0]);
-        var m = parseInt(datePart.split('-')[1]) - 1;
-        var d = parseInt(datePart.split('-')[2]);
-        var h = parseInt(timePart.split(':')[0]);
-        var min = parseInt(timePart.split(':')[1]);
-        return new Date(y, m, d, h, min);
+        try {
+          var cleaned = str.replace(/[（(].*[）)]/, '').trim();
+          var parts = cleaned.split(' ');
+          var datePart = parts[0];
+          var timePart = parts[1] || '00:00';
+          var y = parseInt(datePart.split('-')[0]);
+          var m = parseInt(datePart.split('-')[1]) - 1;
+          var d = parseInt(datePart.split('-')[2]);
+          var h = parseInt(timePart.split(':')[0]);
+          var min = parseInt(timePart.split(':')[1]);
+          var dt = new Date(y, m, d, h, min);
+          if (isNaN(dt.getTime())) return new Date(0);
+          return dt;
+        } catch(e) { return new Date(0); }
       }
 
       function fetchLatest(url, file) {

@@ -47,12 +47,10 @@ def parse_frontmatter(text):
     body = text[end+3:].strip()
     meta = {}
     for line in yaml_text.splitlines():
-        colon = line.index(':')
-        if colon == -1:
+        if ':' not in line:
             continue
-        key = line[:colon].strip()
-        val = line[colon+1:].strip()
-        meta[key] = val
+        key, _, val = line.partition(':')
+        meta[key.strip()] = val.strip()
     return meta, body
 
 def render_markdown(body):
