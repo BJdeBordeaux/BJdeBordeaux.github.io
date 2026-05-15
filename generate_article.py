@@ -166,6 +166,9 @@ def build_article_html(meta, body, article_url, filename):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#9ab5a0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <title>{title} · 梁飞飞</title>
 
   <!-- Open Graph / WeChat Card -->
