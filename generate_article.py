@@ -132,7 +132,7 @@ def render_markdown(body):
 def render_inline(text):
     """Render inline markdown: bold, italic, underline, links, images"""
     # image: ![alt](src)
-    text = re.sub(r'!\[(.*?)\]\((.*?)\)', r'<img src="\2" alt="\1" style="max-width:100%;border-radius:8px;margin:1em 0;">', text)
+    text = re.sub(r'!\[(.*?)\]\((.*?)\)', r'<img src="\2" alt="\1" style="max-width:100%;border-radius:8px;margin:1em 0;" loading="lazy">', text)
     # link: [text](url)
     text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
     # bold+italic
@@ -156,8 +156,8 @@ def build_article_html(meta, body, article_url, filename):
     body_html = render_markdown(body)
 
     # Escape for JS string
-    title_js  = title.replace('\\', '\\\\').replace("'", "\\'").replace('\n', ' ')
-    desc_js   = desc.replace('\\', '\\\\').replace("'", "\\'").replace('\n', ' ')
+    title_js  = title.replace('\\', '\\\\').replace("'", "\\'").replace('"', '\\"').replace('\n', ' ').replace('\r', ' ')
+    desc_js   = desc.replace('\\', '\\\\').replace("'", "\\'").replace('"', '\\"').replace('\n', ' ').replace('\r', ' ')
 
     subtitle_html = ('<p class="article-subtitle">' + html.escape(subtitle) + '</p>') if subtitle else ''
 
