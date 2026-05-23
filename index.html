@@ -27,6 +27,12 @@
         <a href="index.html" class="site-title">梁飞飞<span>·</span>写东西的地方</a>
         <a href="moments.html" class="nav-about">碎碎念</a>
         <a href="about.html" class="nav-about">关于我</a>
+        <div class="nav-menu-wrap">
+          <button class="nav-menu-btn" id="navMenuBtn" title="更多" aria-label="更多">···</button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="games.html" class="nav-dropdown-item">✨ 小游戏</a>
+          </div>
+        </div>
         <button class="theme-toggle" id="themeToggle" title="切换深色模式" aria-label="切换深色模式">🌙</button>
       </div>
       <p class="tagline">大巴黎 · 程序员 · 偶尔写写</p>
@@ -41,12 +47,6 @@
     <div class="moments-preview" id="momentsPreview" style="display:none">
       <div class="moments-preview-label">
         <span class="moments-preview-dot"></span>碎碎念
-        <div class="moments-menu-wrap" id="momentsMenuWrap">
-          <button class="moments-menu-btn" id="momentsMenuBtn" title="更多" aria-label="更多">···</button>
-          <div class="moments-dropdown" id="momentsDropdown">
-            <a href="games.html" class="moments-dropdown-item">🎲 小游戏</a>
-          </div>
-        </div>
       </div>
       <a href="moments.html" class="moments-preview-card" id="momentsPreviewCard">
         <div class="moments-preview-body">
@@ -255,14 +255,13 @@
 
     // ── 三点菜单展开/收拢 ──────────────────────
     (function () {
-      var btn = document.getElementById('momentsMenuBtn');
-      var dropdown = document.getElementById('momentsDropdown');
+      var btn = document.getElementById('navMenuBtn');
+      var dropdown = document.getElementById('navDropdown');
       if (!btn || !dropdown) return;
 
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
         e.preventDefault();
-        var isOpen = dropdown.classList.contains('open');
         dropdown.classList.toggle('open');
       });
 

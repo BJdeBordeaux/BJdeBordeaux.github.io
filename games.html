@@ -17,6 +17,12 @@
       <div class="header-nav">
         <a href="index.html" class="site-title">梁飞飞<span>·</span>小游戏</a>
         <a href="index.html" class="nav-about">← 回主页</a>
+        <div class="nav-menu-wrap">
+          <button class="nav-menu-btn" id="navMenuBtn" title="更多" aria-label="更多">···</button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="games.html" class="nav-dropdown-item">✨ 小游戏</a>
+          </div>
+        </div>
         <button class="theme-toggle" id="themeToggle" title="切换深色模式" aria-label="切换深色模式">🌙</button>
       </div>
       <p class="tagline">一些花里胡哨的东西</p>
@@ -368,6 +374,27 @@
           loadGame(b.dataset.game);
         });
       });
+
+      // ── 导航栏三点菜单 ─────────────────────
+      (function () {
+        var menuBtn = document.getElementById('navMenuBtn');
+        var menuDropdown = document.getElementById('navDropdown');
+        if (!menuBtn || !menuDropdown) return;
+
+        menuBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          menuDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function () {
+          menuDropdown.classList.remove('open');
+        });
+
+        menuDropdown.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+      })();
     })();
   </script>
 
