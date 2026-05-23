@@ -211,27 +211,27 @@
 
       <!-- 标签页 -->
       <div class="swipe-tabs" id="swipeTabs">
-        <button class="swipe-tab" data-index="1">📝 生活</button>
-        <button class="swipe-tab" data-index="0">💭 想法</button>
+        <button class="swipe-tab" data-index="0">📝 生活</button>
+        <button class="swipe-tab" data-index="1">💭 想法</button>
       </div>
 
       <!-- 滑动容器 -->
       <div class="swipe-wrap" id="swipeWrap">
         <div class="swipe-track" id="swipeTrack">
 
-          <!-- 左：想法 -->
+          <!-- 左：生活记录（默认显示） -->
           <div class="swipe-panel">
             <div class="swipe-panel-inner">
-              <div class="moments-timeline" id="thoughtsList">
+              <div class="moments-timeline" id="lifeList">
                 <p style="color:var(--muted); text-align:center; padding: 40px 0; font-size:0.88rem;">加载中…</p>
               </div>
             </div>
           </div>
 
-          <!-- 右：生活记录（默认显示） -->
+          <!-- 右：想法 -->
           <div class="swipe-panel">
             <div class="swipe-panel-inner">
-              <div class="moments-timeline" id="lifeList">
+              <div class="moments-timeline" id="thoughtsList">
                 <p style="color:var(--muted); text-align:center; padding: 40px 0; font-size:0.88rem;">加载中…</p>
               </div>
             </div>
@@ -261,7 +261,7 @@
       var SWIPE_THRESHOLD = 50; // px
 
       // ── 状态 ────────────────────────────────
-      var currentPanel = 1; // 0=想法, 1=生活记录（默认）
+      var currentPanel = 0; // 0=生活记录, 1=想法
 
       // ── DOM 引用 ────────────────────────────
       var trackEl = document.getElementById('swipeTrack');
@@ -323,10 +323,10 @@
           var dx = t.clientX - startX;
 
           if (dx > SWIPE_THRESHOLD) {
-            // 右滑 → 碎碎念（想法，index 0）
+            // 右滑 → 回生活记录（index 0）
             goToPanel(0);
           } else if (dx < -SWIPE_THRESHOLD) {
-            // 左滑 → 生活记录（index 1）
+            // 左滑 → 想法（index 1）
             goToPanel(1);
           }
           isSwiping = false;
@@ -430,7 +430,7 @@
       loadTimeline('lifeList', 'life/index.json');
 
       // ── 默认显示生活记录 ───────────────────
-      goToPanel(1);
+      goToPanel(0);
 
       // ── 深色模式 ───────────────────────────
       (function () {
