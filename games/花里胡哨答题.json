@@ -4,7 +4,7 @@
   "questions": [
     {
       "id": "q1",
-      "title": "请看我上传的这张截图。图片中这位城主的评论，是用豆包（或其他AI工具）写的吗？",
+      "title": "请看我上传的这张截图。图片中这位层主的评论，是用豆包（或其他AI工具）写的吗？",
       "image": "images/games/q1_source.webp",
       "options": [
         {"label": "是", "type": "radio"},

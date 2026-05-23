@@ -32,7 +32,7 @@
       <h1 class="games-title">选个游戏</h1>
       <div class="game-list">
         <button class="game-btn active" data-game="花里胡哨答题">
-          <span class="game-btn-icon">🎲</span>
+          <span class="game-btn-icon">✨</span>
           花里胡哨答题
         </button>
       </div>
@@ -47,6 +47,9 @@
         <h2 class="game-name" id="gameName"></h2>
       </div>
       <p class="game-desc" id="gameDesc"></p>
+
+      <!-- Progress indicator -->
+      <div class="q-progress" id="qProgress"></div>
 
       <!-- Questions container -->
       <div class="questions-wrap" id="questionsWrap"></div>
@@ -78,6 +81,9 @@
 
       // ── 状态 ─────────────────────────────────
       var currentGame = null;
+      var questionCards = [];
+      var currentIndex = 0;
+      var totalQuestions = 0;
 
       // ── DOM 引用 ─────────────────────────────
       var selectorEl = document.getElementById('gameSelector');
@@ -86,6 +92,7 @@
       var gameDescEl = document.getElementById('gameDesc');
       var questionsWrap = document.getElementById('questionsWrap');
       var gameBack = document.getElementById('gameBack');
+      var progressEl = document.getElementById('qProgress');
 
       // ── 加载游戏 ─────────────────────────────
       function loadGame(gameName) {
@@ -112,144 +119,222 @@
         gameNameEl.textContent = data.game;
         gameDescEl.textContent = data.desc || '';
         questionsWrap.innerHTML = '';
+        questionCards = [];
+        currentIndex = 0;
+        totalQuestions = data.questions.length;
 
+        // 进度指示
+        updateProgress();
+
+        // 创建所有卡片，但只显示第一张
         data.questions.forEach(function (q, index) {
-          var card = document.createElement('div');
-          card.className = 'question-card fade-up';
-          card.style.animationDelay = (index * 0.1) + 's';
-
-          // 题目文字
-          var title = document.createElement('p');
-          title.className = 'q-title';
-          title.textContent = (index + 1) + '. ' + q.title;
-          card.appendChild(title);
-
-          // 图片
-          if (q.image) {
-            var imgWrap = document.createElement('div');
-            imgWrap.className = 'q-img-wrap';
-            var img = document.createElement('img');
-            img.className = 'q-img';
-            img.src = q.image;
-            img.alt = '题目配图';
-            img.loading = 'lazy';
-            imgWrap.appendChild(img);
-            card.appendChild(imgWrap);
+          var card = buildCard(q, index);
+          if (index > 0) {
+            card.style.display = 'none';
           }
-
-          // 选项
-          var optionsDiv = document.createElement('div');
-          optionsDiv.className = 'q-options';
-
-          var selectedVal = '';
-          var inputVal = '';
-
-          q.options.forEach(function (opt) {
-            if (opt.type === 'radio') {
-              var label = document.createElement('label');
-              label.className = 'q-option';
-
-              var radio = document.createElement('input');
-              radio.type = 'radio';
-              radio.name = 'q_' + q.id;
-              radio.value = opt.label;
-
-              var span = document.createElement('span');
-              span.textContent = opt.label;
-
-              label.appendChild(radio);
-              label.appendChild(span);
-              optionsDiv.appendChild(label);
-
-              radio.addEventListener('change', function () {
-                selectedVal = opt.label;
-              });
-            } else if (opt.type === 'input') {
-              var inputWrap = document.createElement('div');
-              inputWrap.className = 'q-input-wrap';
-              var input = document.createElement('input');
-              input.type = 'text';
-              input.className = 'q-input';
-              input.placeholder = '输入你的答案…';
-              inputWrap.appendChild(input);
-              optionsDiv.appendChild(inputWrap);
-
-              input.addEventListener('input', function () {
-                inputVal = input.value.trim();
-              });
-            }
-          });
-
-          card.appendChild(optionsDiv);
-
-          // 提交按钮
-          var submitBtn = document.createElement('button');
-          submitBtn.className = 'q-submit';
-          submitBtn.textContent = '提交答案';
-          card.appendChild(submitBtn);
-
-          // 结果区
-          var resultDiv = document.createElement('div');
-          resultDiv.className = 'q-result';
-          resultDiv.style.display = 'none';
-          card.appendChild(resultDiv);
-
-          // ── 提交逻辑 ─────────────────────────
-          submitBtn.addEventListener('click', function () {
-            var answer = selectedVal || inputVal;
-            if (!answer) {
-              submitBtn.textContent = '选一个或写点啥再提交';
-              submitBtn.classList.add('q-submit-warn');
-              setTimeout(function () {
-                submitBtn.textContent = '提交答案';
-                submitBtn.classList.remove('q-submit-warn');
-              }, 1800);
-              return;
-            }
-
-            // 显示结果
-            var resultHtml = '';
-            resultHtml += '<div class="q-result-col">';
-            resultHtml += '  <div class="q-result-label">你的答案</div>';
-            resultHtml += '  <div class="q-result-box q-result-user">' + escapeHtml(answer) + '</div>';
-            resultHtml += '</div>';
-            resultHtml += '<div class="q-result-divider"></div>';
-            resultHtml += '<div class="q-result-col">';
-            resultHtml += '  <div class="q-result-label">梁飞飞的答案</div>';
-            resultHtml += '  <div class="q-result-box q-result-mine">' + escapeHtml(q.myAnswer) + '</div>';
-            resultHtml += '</div>';
-
-            resultDiv.innerHTML = resultHtml;
-            resultDiv.style.display = 'flex';
-            submitBtn.style.display = 'none';
-
-            // 禁用选项
-            var radios = card.querySelectorAll('input[type="radio"]');
-            for (var i = 0; i < radios.length; i++) {
-              radios[i].disabled = true;
-            }
-            var inputs = card.querySelectorAll('.q-input');
-            for (var i = 0; i < inputs.length; i++) {
-              inputs[i].disabled = true;
-            }
-
-            // 记录答案
-            saveAnswer(q.id, answer);
-          });
-
           questionsWrap.appendChild(card);
+          questionCards.push(card);
         });
       }
 
-      // ── 记录答案（当前用文件，后续可换数据库） ──
+      // ── 构建单张卡片 ─────────────────────────
+      function buildCard(q, index) {
+        var card = document.createElement('div');
+        card.className = 'question-card fade-up';
+        card.id = 'card_' + index;
+
+        // 题目文字
+        var title = document.createElement('p');
+        title.className = 'q-title';
+        title.textContent = (index + 1) + '. ' + q.title;
+        card.appendChild(title);
+
+        // 图片
+        if (q.image) {
+          var imgWrap = document.createElement('div');
+          imgWrap.className = 'q-img-wrap';
+          var img = document.createElement('img');
+          img.className = 'q-img';
+          img.src = q.image;
+          img.alt = '题目配图';
+          img.loading = 'lazy';
+          imgWrap.appendChild(img);
+          card.appendChild(imgWrap);
+        }
+
+        // 选项
+        var optionsDiv = document.createElement('div');
+        optionsDiv.className = 'q-options';
+
+        var selectedVal = '';
+        var inputVal = '';
+
+        q.options.forEach(function (opt) {
+          if (opt.type === 'radio') {
+            var label = document.createElement('label');
+            label.className = 'q-option';
+
+            var radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'q_' + q.id;
+            radio.value = opt.label;
+
+            var span = document.createElement('span');
+            span.textContent = opt.label;
+
+            label.appendChild(radio);
+            label.appendChild(span);
+            optionsDiv.appendChild(label);
+
+            radio.addEventListener('change', function () {
+              selectedVal = opt.label;
+            });
+          } else if (opt.type === 'input') {
+            var inputWrap = document.createElement('div');
+            inputWrap.className = 'q-input-wrap';
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'q-input';
+            input.placeholder = '输入你的答案…';
+            inputWrap.appendChild(input);
+            optionsDiv.appendChild(inputWrap);
+
+            input.addEventListener('input', function () {
+              inputVal = input.value.trim();
+            });
+          }
+        });
+
+        card.appendChild(optionsDiv);
+
+        // 提交按钮
+        var submitBtn = document.createElement('button');
+        submitBtn.className = 'q-submit';
+        submitBtn.textContent = '提交答案';
+        card.appendChild(submitBtn);
+
+        // 结果区
+        var resultDiv = document.createElement('div');
+        resultDiv.className = 'q-result';
+        resultDiv.style.display = 'none';
+        card.appendChild(resultDiv);
+
+        // "下一题" 按钮（提交后才出现）
+        var nextBtn = document.createElement('button');
+        nextBtn.className = 'q-next-btn';
+        nextBtn.style.display = 'none';
+
+        var isLast = (index === totalQuestions - 1);
+        if (isLast) {
+          nextBtn.textContent = '完成 ✓';
+          nextBtn.addEventListener('click', function () {
+            // 回到游戏选择
+            goBackToSelector();
+          });
+        } else {
+          nextBtn.textContent = '下一题 →';
+          nextBtn.addEventListener('click', function () {
+            showQuestion(index + 1);
+          });
+        }
+        card.appendChild(nextBtn);
+
+        // ── 提交逻辑 ─────────────────────────
+        submitBtn.addEventListener('click', function () {
+          var answer = selectedVal || inputVal;
+          if (!answer) {
+            submitBtn.textContent = '选一个或写点啥再提交';
+            submitBtn.classList.add('q-submit-warn');
+            setTimeout(function () {
+              submitBtn.textContent = '提交答案';
+              submitBtn.classList.remove('q-submit-warn');
+            }, 1800);
+            return;
+          }
+
+          // 显示结果
+          var resultHtml = '';
+          resultHtml += '<div class="q-result-col">';
+          resultHtml += '  <div class="q-result-label">你的答案</div>';
+          resultHtml += '  <div class="q-result-box q-result-user">' + escapeHtml(answer) + '</div>';
+          resultHtml += '</div>';
+          resultHtml += '<div class="q-result-divider"></div>';
+          resultHtml += '<div class="q-result-col">';
+          resultHtml += '  <div class="q-result-label">梁飞飞的答案</div>';
+          resultHtml += '  <div class="q-result-box q-result-mine">' + escapeHtml(q.myAnswer) + '</div>';
+          resultHtml += '</div>';
+
+          resultDiv.innerHTML = resultHtml;
+          resultDiv.style.display = 'flex';
+          submitBtn.style.display = 'none';
+
+          // 显示"下一题"按钮
+          nextBtn.style.display = 'inline-block';
+
+          // 禁用选项
+          var radios = card.querySelectorAll('input[type="radio"]');
+          for (var i = 0; i < radios.length; i++) {
+            radios[i].disabled = true;
+          }
+          var inputs = card.querySelectorAll('.q-input');
+          for (var i = 0; i < inputs.length; i++) {
+            inputs[i].disabled = true;
+          }
+
+          // 记录答案
+          saveAnswer(q.id, answer);
+        });
+
+        return card;
+      }
+
+      // ── 切换题目 ─────────────────────────────
+      function showQuestion(index) {
+        // 隐藏当前卡片
+        if (currentIndex >= 0 && currentIndex < questionCards.length) {
+          questionCards[currentIndex].style.display = 'none';
+        }
+        // 显示目标卡片
+        currentIndex = index;
+        var card = questionCards[currentIndex];
+        card.style.display = '';
+        // 重新触发动画
+        card.classList.remove('fade-up');
+        void card.offsetWidth; // 强制回流
+        card.classList.add('fade-up');
+        // 更新进度
+        updateProgress();
+      }
+
+      // ── 进度指示 ─────────────────────────────
+      function updateProgress() {
+        if (!totalQuestions) return;
+        var html = '';
+        for (var i = 0; i < totalQuestions; i++) {
+          var cls = (i === currentIndex) ? 'q-dot active' : 'q-dot';
+          if (i < currentIndex) cls += ' done';
+          html += '<span class="' + cls + '"></span>';
+        }
+        progressEl.innerHTML = html;
+      }
+
+      // ── 返回游戏选择 ─────────────────────────
+      function goBackToSelector() {
+        currentGame = null;
+        gameAreaEl.style.display = 'none';
+        selectorEl.style.display = 'block';
+        questionsWrap.innerHTML = '';
+        questionCards = [];
+        currentIndex = 0;
+      }
+
+      // ── 记录答案（当前用 localStorage） ───────
       function saveAnswer(questionId, answer) {
         var payload = {
           questionId: questionId,
           answer: answer,
           timestamp: new Date().toISOString()
         };
-        // 尝试通过网络请求记录
-        // 由于是静态页面，我们用 localStorage 暂存，后续可扩展
         var key = 'game_answers_' + questionId;
         var stored = [];
         try {
@@ -260,9 +345,6 @@
         try {
           localStorage.setItem(key, JSON.stringify(stored));
         } catch(e) {}
-
-        // 可选：通过 GitHub API 或第三方服务持久化
-        // 当前用 localStorage
       }
 
       // ── HTML 转义 ───────────────────────────
@@ -272,12 +354,9 @@
         return div.innerHTML;
       }
 
-      // ── 返回游戏选择 ─────────────────────────
+      // ── 返回游戏选择（按钮） ─────────────────
       gameBack.addEventListener('click', function () {
-        currentGame = null;
-        gameAreaEl.style.display = 'none';
-        selectorEl.style.display = 'block';
-        questionsWrap.innerHTML = '';
+        goBackToSelector();
       });
 
       // ── 选择游戏 ─────────────────────────────
