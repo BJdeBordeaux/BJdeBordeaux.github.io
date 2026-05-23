@@ -936,6 +936,77 @@ footer {
   letter-spacing: 0.06em;
 }
 
+/* ── Three-dot menu (index) ─────────────── */
+.moments-menu-wrap {
+  position: relative;
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.moments-menu-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 6px;
+  line-height: 1.6;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  font-family: var(--font-body);
+}
+
+.moments-menu-btn:hover {
+  color: var(--accent);
+  border-color: var(--border);
+  background: var(--card);
+}
+
+.moments-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 120px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.moments-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.moments-dropdown-item {
+  display: block;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.moments-dropdown-item:hover {
+  background: rgba(154, 181, 160, 0.08);
+  color: var(--accent);
+}
+
+.moments-dropdown-item + .moments-dropdown-item {
+  border-top: 1px solid var(--border);
+}
+
 /* ── Moments timeline page ───────────────── */
 .moments-page {
   padding: 64px 0 120px;

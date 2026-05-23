@@ -1,0 +1,30 @@
+{
+  "game": "花里胡哨答题",
+  "desc": "每道题没有标准答案。提交后你会看到你自己的答案，和梁飞飞的答案摆在一起。",
+  "questions": [
+    {
+      "id": "q1",
+      "title": "请看我上传的这张截图。图片中这位城主的评论，是用豆包（或其他AI工具）写的吗？",
+      "image": "images/games/q1_source.webp",
+      "options": [
+        {"label": "是", "type": "radio"},
+        {"label": "不是", "type": "radio"},
+        {"label": "管它呢", "type": "radio"},
+        {"label": "自己写", "type": "input"}
+      ],
+      "myAnswer": "哈哈哈哈豆包：我怎么突然被 cue 到了？"
+    },
+    {
+      "id": "q2",
+      "title": "某一天，你放纵自己大吃特吃了一顿垃圾食品，之后感到后悔，担心变胖和影响健康，于是决定要管住自己。第二天，吃零食、垃圾食品的欲望又上来了。这时你会怎么选？",
+      "image": null,
+      "options": [
+        {"label": "克制欲望，说到做到", "type": "radio"},
+        {"label": "大吃特吃，管它呢", "type": "radio"},
+        {"label": "和这个欲望待一会儿，看看它想说什么", "type": "radio"},
+        {"label": "自己写", "type": "input"}
+      ],
+      "myAnswer": "欢迎这个欲望来，并且和它快乐做游戏"
+    }
+  ]
+}

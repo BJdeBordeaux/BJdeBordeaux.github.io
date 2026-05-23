@@ -41,6 +41,12 @@
     <div class="moments-preview" id="momentsPreview" style="display:none">
       <div class="moments-preview-label">
         <span class="moments-preview-dot"></span>碎碎念
+        <div class="moments-menu-wrap" id="momentsMenuWrap">
+          <button class="moments-menu-btn" id="momentsMenuBtn" title="更多" aria-label="更多">···</button>
+          <div class="moments-dropdown" id="momentsDropdown">
+            <a href="games.html" class="moments-dropdown-item">🎲 小游戏</a>
+          </div>
+        </div>
       </div>
       <a href="moments.html" class="moments-preview-card" id="momentsPreviewCard">
         <div class="moments-preview-body">
@@ -245,6 +251,28 @@
         }
         document.getElementById('momentsPreview').style.display = 'block';
       }).catch(function () {});
+    })();
+
+    // ── 三点菜单展开/收拢 ──────────────────────
+    (function () {
+      var btn = document.getElementById('momentsMenuBtn');
+      var dropdown = document.getElementById('momentsDropdown');
+      if (!btn || !dropdown) return;
+
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var isOpen = dropdown.classList.contains('open');
+        dropdown.classList.toggle('open');
+      });
+
+      document.addEventListener('click', function () {
+        dropdown.classList.remove('open');
+      });
+
+      dropdown.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
     })();
 
     // ── 深色模式 ─────────────────────────────
