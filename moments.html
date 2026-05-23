@@ -54,8 +54,8 @@
     .swipe-wrap {
       position: relative;
       overflow: hidden;
-      touch-action: pan-y;
       -webkit-overflow-scrolling: touch;
+      width: 100%;
     }
 
     .swipe-track {
@@ -67,6 +67,7 @@
     .swipe-panel {
       flex: 0 0 100%;
       min-width: 0;
+      width: 100%;
     }
 
     .swipe-panel-inner {
@@ -273,7 +274,8 @@
       function goToPanel(index) {
         if (index < 0 || index > 1) return;
         currentPanel = index;
-        trackEl.style.transform = 'translateX(-' + (index * 50) + '%)';
+        var offset = index * trackEl.parentElement.offsetWidth;
+        trackEl.style.transform = 'translateX(-' + offset + 'px)';
 
         // 更新标签
         tabs.forEach(function (t, i) {
@@ -331,7 +333,10 @@
         }, { passive: true });
       })();
 
-      // ── 图片弹窗 ───────────────────────────
+      // ── 重绘时重新校正位置（横竖屏切换） ────
+      window.addEventListener('resize', function () {
+        goToPanel(currentPanel);
+      });
       function openLightbox(src, alt) {
         lbImg.src = src;
         lbImg.alt = alt || '';

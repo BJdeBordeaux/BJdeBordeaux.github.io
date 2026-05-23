@@ -1186,6 +1186,11 @@ footer {
 /* ── Responsive ──────────────────────────── */
 
 @media (max-width: 600px) {
+  .header-nav { gap: 12px; }
+  .header-nav .site-title { font-size: 1.1rem; white-space: nowrap; }
+  .header-nav .nav-about,
+  .header-nav .nav-menu-btn,
+  .header-nav .theme-toggle { flex-shrink: 0; }
   .container { padding: 0 20px; }
   header { padding: 52px 0 40px; }
   .article-card { padding: 28px 24px; }
