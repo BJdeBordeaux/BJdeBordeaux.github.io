@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "outputDirectory": ".",
+  "buildCommand": null,
+  "devCommand": null,
+  "github": {
+    "silent": true
+  }
+}
