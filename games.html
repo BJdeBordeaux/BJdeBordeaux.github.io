@@ -41,6 +41,10 @@
           <span class="game-btn-icon">✨</span>
           花里胡哨答题
         </button>
+        <button class="game-btn" data-game="感官打卡">
+          <span class="game-btn-icon">🧘</span>
+          感官打卡
+        </button>
       </div>
       <p class="games-more">更多游戏，待续……</p>
     </div>
@@ -375,6 +379,12 @@
 
       // ── 返回游戏选择（按钮） ─────────────────
       gameBack.addEventListener('click', function () {
+        // 清理感官游戏计时器（如果有）
+        if (sgTimer) {
+          clearInterval(sgTimer);
+          sgTimer = null;
+        }
+        sgRunning = false;
         goBackToSelector();
       });
 
@@ -384,9 +394,331 @@
         b.addEventListener('click', function () {
           gameBtns.forEach(function (x) { x.classList.remove('active'); });
           b.classList.add('active');
-          loadGame(b.dataset.game);
+
+          var name = b.dataset.game;
+          if (name === '感官打卡') {
+            startSensoryGame();
+          } else {
+            loadGame(name);
+          }
         });
       });
+
+      // ════════════════════════════════════════
+      //  感官打卡
+      // ════════════════════════════════════════
+
+      var SENSES = [
+        { id: 'see',   emoji: '👁', name: '看',  desc: '看看你眼前的东西，注意颜色、形状、光线' },
+        { id: 'smell', emoji: '👃', name: '闻',  desc: '闻一闻周围的气味，淡淡的也好' },
+        { id: 'taste', emoji: '👅', name: '尝',  desc: '感受口中的味道，或者喝一口水' },
+        { id: 'touch', emoji: '✋', name: '触',  desc: '感受身体的触感，衣服、温度、坐姿' },
+        { id: 'hear',  emoji: '👂', name: '听',  desc: '听听周围的声音，近的和远的' }
+      ];
+
+      var PAIRS = [
+        { senses: [0, 4], label: '看 + 听', desc: '同时看和听，注意两种感官的体验' },
+        { senses: [1, 2], label: '闻 + 尝', desc: '感受气味与味道的交织' },
+        { senses: [3, 0], label: '触 + 看', desc: '感受触觉的同时继续看' },
+        { senses: [4, 3], label: '听 + 触', desc: '边听边感受身体的存在' },
+        { senses: [1, 4], label: '闻 + 听', desc: '边闻边听，两个感官同时打开' }
+      ];
+
+      var TRIPLES = [
+        { senses: [0, 4, 3], label: '看 + 听 + 触', desc: '同时留意视觉、听觉和触觉' },
+        { senses: [1, 2, 3], label: '闻 + 尝 + 触', desc: '气味、味道和身体的感受' },
+        { senses: [0, 1, 4], label: '看 + 闻 + 听', desc: '看、闻、听三种感官同时打开' }
+      ];
+
+      var TIMER_SEC = 15;
+      var sgTimer = null;
+      var sgRemaining = 0;
+      var sgMode = '';
+      var sgTasks = [];
+      var sgCurrentTask = -1;
+      var sgCompleted = [];
+      var sgRunning = false;
+
+      // ── 启动感官游戏 ─────────────────────────
+      function startSensoryGame() {
+        // 清理答题游戏状态
+        questionCards = [];
+        currentIndex = 0;
+        totalQuestions = 0;
+
+        currentGame = '感官打卡';
+        selectorEl.style.display = 'none';
+        gameAreaEl.style.display = 'block';
+        gameNameEl.textContent = '感官打卡';
+        gameDescEl.textContent = '把注意力带到你的感官上，一个一个地感受它们。';
+        questionsWrap.innerHTML = '';
+
+        renderSensoryModeSelect();
+      }
+
+      // ── 模式选择 ─────────────────────────────
+      function renderSensoryModeSelect() {
+        questionsWrap.innerHTML =
+          '<div class="sg-mode-select">' +
+            '<button class="sg-mode-btn" data-mode="single">' +
+              '<span class="sg-mode-btn-label">逐个感官</span>' +
+              '<span class="sg-mode-btn-desc">依次专注 5 个感官，每个 15 秒</span>' +
+            '</button>' +
+            '<button class="sg-mode-btn" data-mode="pair">' +
+              '<span class="sg-mode-btn-label">两两组合</span>' +
+              '<span class="sg-mode-btn-desc">5 组配对，同时注意两个感官</span>' +
+            '</button>' +
+            '<button class="sg-mode-btn" data-mode="triple">' +
+              '<span class="sg-mode-btn-label">三三组合</span>' +
+              '<span class="sg-mode-btn-desc">3 组，同时打开三个感官</span>' +
+            '</button>' +
+          '</div>';
+
+        questionsWrap.querySelectorAll('.sg-mode-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            sgStartMode(btn.dataset.mode);
+          });
+        });
+      }
+
+      // ── 开始某个模式 ─────────────────────────
+      function sgStartMode(mode) {
+        sgMode = mode;
+        sgCompleted = [];
+        sgCurrentTask = -1;
+        sgRunning = false;
+
+        if (mode === 'single') {
+          sgTasks = SENSES.map(function (s, i) {
+            return { type: 'single', senseIndex: i, label: s.emoji + ' ' + s.name, desc: s.desc };
+          });
+        } else if (mode === 'pair') {
+          sgTasks = PAIRS.map(function (p) {
+            return { type: 'pair', senseIndices: p.senses, label: p.label, desc: p.desc };
+          });
+        } else {
+          sgTasks = TRIPLES.map(function (t) {
+            return { type: 'triple', senseIndices: t.senses, label: t.label, desc: t.desc };
+          });
+        }
+
+        renderSensoryGrid();
+        sgStartTask(0);
+      }
+
+      // ── 渲染感官网格 + 计时区 ────────────────
+      function renderSensoryGrid() {
+        // 感官网格
+        var gridHtml = '<div class="sg-senses">';
+        SENSES.forEach(function (s, i) {
+          var cls = 'sg-sense';
+          gridHtml +=
+            '<div class="' + cls + '" data-index="' + i + '">' +
+              '<span class="sg-sense-emoji">' + s.emoji + '</span>' +
+              '<span class="sg-sense-name">' + s.name + '</span>' +
+              '<span class="sg-sense-check"></span>' +
+            '</div>';
+        });
+        gridHtml += '</div>';
+
+        // 当前任务
+        gridHtml +=
+          '<div class="sg-current">' +
+            '<div class="sg-current-label">当前</div>' +
+            '<div class="sg-current-sense" id="sgCurrentSense"></div>' +
+            '<div class="sg-current-mode-name" id="sgCurrentModeName"></div>' +
+            '<div class="sg-current-desc" id="sgCurrentDesc"></div>' +
+            '<div class="sg-timer-bar-wrap">' +
+              '<div class="sg-timer-bar-fill" id="sgTimerFill"></div>' +
+            '</div>' +
+            '<div class="sg-timer-text" id="sgTimerText">15s</div>' +
+            '<div class="sg-controls">' +
+              '<button class="sg-skip-btn" id="sgSkipBtn">跳过剩余时间</button>' +
+            '</div>' +
+          '</div>';
+
+        // 进度（用已有样式）
+        var progressHtml = '<div class="q-progress" style="border-bottom:none;margin-bottom:0;padding-bottom:0">';
+        progressHtml += '<div class="q-progress-dots">';
+        for (var i = 0; i < sgTasks.length; i++) {
+          var cls = 'q-dot' + (i === sgCurrentTask ? ' active' : '');
+          progressHtml += '<span class="' + cls + '"></span>';
+        }
+        progressHtml += '</div></div>';
+
+        questionsWrap.innerHTML = progressHtml + gridHtml;
+      }
+
+      // ── 开始第 index 个任务 ──────────────────
+      function sgStartTask(index) {
+        if (index >= sgTasks.length) {
+          sgFinish();
+          return;
+        }
+
+        sgCurrentTask = index;
+        sgRunning = true;
+        sgRemaining = TIMER_SEC;
+
+        var task = sgTasks[index];
+
+        // 更新感官网格状态
+        var senseEls = document.querySelectorAll('.sg-sense');
+        senseEls.forEach(function (el) {
+          el.classList.remove('active');
+        });
+
+        // 更新当前任务显示
+        var senseText = '';
+        if (task.type === 'single') {
+          var s = SENSES[task.senseIndex];
+          senseText = s.emoji + ' ' + s.name;
+          document.getElementById('sgCurrentModeName').textContent = '';
+          senseEls[task.senseIndex].classList.add('active');
+        } else {
+          senseText = task.label;
+          document.getElementById('sgCurrentModeName').textContent =
+            sgMode === 'pair' ? '两两组合' : '三三组合';
+          task.senseIndices.forEach(function (idx) {
+            if (senseEls[idx]) senseEls[idx].classList.add('active');
+          });
+        }
+
+        document.getElementById('sgCurrentSense').textContent = senseText;
+        document.getElementById('sgCurrentDesc').textContent = task.desc;
+
+        // 更新进度
+        updateSensoryProgress();
+
+        // 重置计时器显示
+        document.getElementById('sgTimerFill').style.width = '100%';
+        document.getElementById('sgTimerText').textContent = TIMER_SEC + 's';
+
+        // 清除旧计时器
+        if (sgTimer) {
+          clearInterval(sgTimer);
+          sgTimer = null;
+        }
+
+        // 启动新计时器
+        sgTimer = setInterval(function () {
+          sgRemaining--;
+          if (sgRemaining <= 0) {
+            clearInterval(sgTimer);
+            sgTimer = null;
+            sgCompleteTask();
+          } else {
+            var pct = (sgRemaining / TIMER_SEC) * 100;
+            document.getElementById('sgTimerFill').style.width = pct + '%';
+            document.getElementById('sgTimerText').textContent = sgRemaining + 's';
+          }
+        }, 1000);
+
+        // 跳过按钮
+        var skipBtn = document.getElementById('sgSkipBtn');
+
+        // 先解绑旧监听器（替换副本）
+        var newSkip = skipBtn.cloneNode(true);
+        skipBtn.parentNode.replaceChild(newSkip, skipBtn);
+        newSkip.addEventListener('click', function () {
+          if (sgRunning && sgTimer) {
+            clearInterval(sgTimer);
+            sgTimer = null;
+            sgCompleteTask();
+          }
+        });
+      }
+
+      // ── 完成当前任务 ─────────────────────────
+      function sgCompleteTask() {
+        sgRunning = false;
+
+        var task = sgTasks[sgCurrentTask];
+
+        // 标记已完成的感官
+        if (task.type === 'single') {
+          if (sgCompleted.indexOf(task.senseIndex) === -1) {
+            sgCompleted.push(task.senseIndex);
+          }
+          var el = document.querySelector('.sg-sense[data-index="' + task.senseIndex + '"]');
+          if (el) {
+            el.classList.remove('active');
+            el.classList.add('done');
+            el.querySelector('.sg-sense-check').textContent = '✓';
+          }
+        } else {
+          task.senseIndices.forEach(function (idx) {
+            if (sgCompleted.indexOf(idx) === -1) {
+              sgCompleted.push(idx);
+            }
+            var el = document.querySelector('.sg-sense[data-index="' + idx + '"]');
+            if (el) {
+              el.classList.remove('active');
+              el.classList.add('done');
+              el.querySelector('.sg-sense-check').textContent = '✓';
+            }
+          });
+        }
+
+        // 更新进度
+        updateSensoryProgress();
+
+        // 震动
+        try { navigator.vibrate(50); } catch(e) {}
+
+        // 更新计时显示
+        document.getElementById('sgTimerText').textContent = '✓';
+
+        // 自动进下一个
+        setTimeout(function () {
+          sgStartTask(sgCurrentTask + 1);
+        }, 600);
+      }
+
+      // ── 更新进度 ─────────────────────────────
+      function updateSensoryProgress() {
+        var dots = document.querySelectorAll('.q-progress-dots .q-dot');
+        if (!dots.length) return;
+        dots.forEach(function (d, i) {
+          d.className = 'q-dot';
+          if (i < sgCurrentTask) d.classList.add('done');
+          if (i === sgCurrentTask) d.classList.add('active');
+        });
+      }
+
+      // ── 完成 ─────────────────────────────────
+      function sgFinish() {
+        if (sgTimer) {
+          clearInterval(sgTimer);
+          sgTimer = null;
+        }
+
+        var desc = '';
+        var modeLabel = '个感官';
+        if (sgMode === 'single') modeLabel = '个感官逐个打卡完成';
+        else if (sgMode === 'pair') modeLabel = '组两两组合完成';
+        else modeLabel = '组三三组合完成';
+
+        // 收集完成总结
+        var summaryHtml = '';
+        sgCompleted.forEach(function (idx) {
+          var s = SENSES[idx];
+          summaryHtml += '<span class="sg-complete-sense">' + s.emoji + ' ' + s.name + '</span>';
+        });
+
+        questionsWrap.innerHTML =
+          '<div class="sg-complete">' +
+            '<div class="sg-complete-icon">🧘</div>' +
+            '<div class="sg-complete-title">' + sgTasks.length + ' ' + modeLabel + '</div>' +
+            '<div class="sg-complete-desc">你把注意力带回了身体，这就是修行的开始。</div>' +
+            '<div class="sg-complete-summary">' + summaryHtml + '</div>' +
+            '<button class="sg-restart-btn" id="sgRestartBtn">再来一次</button>' +
+          '</div>';
+
+        document.getElementById('sgRestartBtn').addEventListener('click', function () {
+          renderSensoryModeSelect();
+        });
+      }
 
       // ── 导航栏三点菜单 ─────────────────────
       (function () {
