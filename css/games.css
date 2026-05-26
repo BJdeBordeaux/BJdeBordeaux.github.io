@@ -389,7 +389,7 @@
    ════════════════════════════════════════ */
 
 /* ── Mode selector ──────────────────────── */
-.sg-mode-select {
+.zm-mode-select {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -397,7 +397,7 @@
   padding: 40px 0 20px;
 }
 
-.sg-mode-btn {
+.zm-mode-btn {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -415,26 +415,26 @@
   max-width: 320px;
 }
 
-.sg-mode-btn:hover {
+.zm-mode-btn:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0,0,0,0.08);
 }
 
-.sg-mode-btn-label {
+.zm-mode-btn-label {
   font-size: 1rem;
   letter-spacing: 0.06em;
   font-weight: 500;
 }
 
-.sg-mode-btn-desc {
+.zm-mode-btn-desc {
   font-size: 0.78rem;
   color: var(--muted);
   letter-spacing: 0.04em;
 }
 
 /* ── Sensory grid ───────────────────────── */
-.sg-senses {
+.zm-senses {
   display: flex;
   justify-content: center;
   gap: 12px;
@@ -442,7 +442,7 @@
   flex-wrap: wrap;
 }
 
-.sg-sense {
+.zm-sense {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -455,31 +455,31 @@
   transition: border-color 0.25s, background 0.25s, transform 0.25s;
 }
 
-.sg-sense.active {
+.zm-sense.active {
   border-color: var(--accent);
   background: rgba(154, 181, 160, 0.06);
   transform: scale(1.06);
   box-shadow: 0 0 0 3px rgba(154, 181, 160, 0.12);
 }
 
-.sg-sense.done {
+.zm-sense.done {
   border-color: var(--accent);
   background: rgba(154, 181, 160, 0.08);
   opacity: 0.7;
 }
 
-.sg-sense-emoji {
+.zm-sense-emoji {
   font-size: 1.6rem;
   line-height: 1.2;
 }
 
-.sg-sense-name {
+.zm-sense-name {
   font-size: 0.72rem;
   color: var(--muted);
   letter-spacing: 0.06em;
 }
 
-.sg-sense-check {
+.zm-sense-check {
   font-size: 0.75rem;
   height: 1em;
   line-height: 1;
@@ -487,7 +487,7 @@
 }
 
 /* ── Current task ───────────────────────── */
-.sg-current {
+.zm-current {
   text-align: center;
   padding: 28px 20px;
   margin-bottom: 20px;
@@ -497,20 +497,20 @@
   box-shadow: var(--shadow);
 }
 
-.sg-current-label {
+.zm-current-label {
   font-size: 0.8rem;
   color: var(--muted);
   letter-spacing: 0.06em;
   margin-bottom: 8px;
 }
 
-.sg-current-sense {
+.zm-current-sense {
   font-size: 2rem;
   line-height: 1.3;
   margin-bottom: 6px;
 }
 
-.sg-current-desc {
+.zm-current-desc {
   font-size: 1rem;
   color: var(--text);
   line-height: 1.6;
@@ -518,14 +518,14 @@
   min-height: 2em;
 }
 
-.sg-current-mode-name {
+.zm-current-mode-name {
   font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 20px;
 }
 
 /* ── Timer bar ──────────────────────────── */
-.sg-timer-bar-wrap {
+.zm-timer-bar-wrap {
   width: 100%;
   max-width: 320px;
   margin: 0 auto 8px;
@@ -535,7 +535,7 @@
   overflow: hidden;
 }
 
-.sg-timer-bar-fill {
+.zm-timer-bar-fill {
   height: 100%;
   border-radius: 99px;
   background: linear-gradient(to right, var(--accent), var(--accent2));
@@ -543,7 +543,7 @@
   width: 100%;
 }
 
-.sg-timer-text {
+.zm-timer-text {
   font-size: 2rem;
   font-weight: 300;
   color: var(--muted);
@@ -553,14 +553,14 @@
 }
 
 /* ── Skip / controls ────────────────────── */
-.sg-controls {
+.zm-controls {
   display: flex;
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
-.sg-skip-btn {
+.zm-skip-btn {
   padding: 8px 22px;
   border-radius: 99px;
   border: 1px solid var(--border);
@@ -573,23 +573,23 @@
   transition: all 0.15s;
 }
 
-.sg-skip-btn:hover {
+.zm-skip-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
 
 /* ── Complete ───────────────────────────── */
-.sg-complete {
+.zm-complete {
   text-align: center;
   padding: 40px 20px;
 }
 
-.sg-complete-icon {
+.zm-complete-icon {
   font-size: 3rem;
   margin-bottom: 12px;
 }
 
-.sg-complete-title {
+.zm-complete-title {
   font-family: var(--font-head);
   font-size: 1.4rem;
   font-weight: 400;
@@ -597,14 +597,14 @@
   margin-bottom: 8px;
 }
 
-.sg-complete-desc {
+.zm-complete-desc {
   font-size: 0.9rem;
   color: var(--muted);
   line-height: 1.7;
   margin-bottom: 8px;
 }
 
-.sg-complete-summary {
+.zm-complete-summary {
   display: flex;
   justify-content: center;
   gap: 8px;
@@ -612,7 +612,7 @@
   flex-wrap: wrap;
 }
 
-.sg-complete-sense {
+.zm-complete-sense {
   font-size: 0.85rem;
   color: var(--muted);
   padding: 6px 14px;
@@ -621,7 +621,7 @@
   background: var(--card);
 }
 
-.sg-restart-btn {
+.zm-restart-btn {
   padding: 12px 32px;
   border-radius: 99px;
   border: none;
@@ -634,18 +634,18 @@
   transition: background 0.18s, transform 0.15s;
 }
 
-.sg-restart-btn:hover {
+.zm-restart-btn:hover {
   background: #8aa890;
   transform: translateY(-1px);
 }
 
 /* ── Sensory game responsive ────────────── */
 @media (max-width: 500px) {
-  .sg-sense { width: 54px; padding: 10px 0 6px; }
-  .sg-sense-emoji { font-size: 1.3rem; }
-  .sg-current-sense { font-size: 1.6rem; }
-  .sg-current-desc { font-size: 0.9rem; }
-  .sg-timer-text { font-size: 1.6rem; }
+  .zm-sense { width: 54px; padding: 10px 0 6px; }
+  .zm-sense-emoji { font-size: 1.3rem; }
+  .zm-current-sense { font-size: 1.6rem; }
+  .zm-current-desc { font-size: 0.9rem; }
+  .zm-timer-text { font-size: 1.6rem; }
 }
 
 /* ── Responsive ─────────────────────────── */
