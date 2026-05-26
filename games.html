@@ -20,7 +20,7 @@
         <div class="nav-menu-wrap">
           <button class="nav-menu-btn" id="navMenuBtn" title="更多" aria-label="更多">···</button>
           <div class="nav-dropdown" id="navDropdown">
-            <a href="games.html" class="nav-dropdown-item">✨ 小游戏</a>
+            <a href="games.html" class="nav-dropdown-item">🎮 小游戏</a>
           </div>
         </div>
         <button class="theme-toggle" id="themeToggle" title="切换深色模式" aria-label="切换深色模式">🌙</button>
@@ -37,32 +37,77 @@
     <div class="game-selector" id="gameSelector">
       <h1 class="games-title">选个游戏</h1>
       <div class="game-list">
-        <button class="game-btn active" data-game="花里胡哨答题">
+        <button class="game-btn" data-game="花里胡哨答题">
           <span class="game-btn-icon">✨</span>
           花里胡哨答题
         </button>
-        <button class="game-btn" data-game="感官打卡">
+        <button class="game-btn" data-game="禅修地图">
           <span class="game-btn-icon">🧘</span>
-          感官打卡
+          禅修地图
         </button>
       </div>
       <p class="games-more">更多游戏，待续……</p>
     </div>
 
-    <!-- Game area -->
-    <div class="game-area" id="gameArea">
-      <!-- Header -->
+    <!-- Game area: 花里胡哨答题 game area -->
+    <div class="game-area" id="qaArea">
       <div class="game-header">
-        <button class="game-back" id="gameBack">← 换一个游戏</button>
-        <h2 class="game-name" id="gameName"></h2>
+        <button class="game-back" id="qaBack">← 换一个游戏</button>
+        <h2 class="game-name" id="qaName"></h2>
       </div>
-      <p class="game-desc" id="gameDesc"></p>
+      <p class="game-desc" id="qaDesc"></p>
+      <div class="q-progress" id="qaProgress"></div>
+      <div class="questions-wrap" id="qaWrap"></div>
+    </div>
 
-      <!-- Progress indicator -->
-      <div class="q-progress" id="qProgress"></div>
+    <!-- Game area: 禅修地图 entry (level select) -->
+    <div class="game-area" id="zmEntry" style="display:none">
+      <div class="gc-back-bar">
+        <button class="game-back" id="zmBackEntry">← 换一个游戏</button>
+        <h2 class="gc-level-title">禅修地图</h2>
+      </div>
+      <p class="gc-entry-desc">每一关都是一段修行的入口。</p>
+      <div class="gc-levels" id="zmLevels"></div>
+    </div>
 
-      <!-- Questions container -->
-      <div class="questions-wrap" id="questionsWrap"></div>
+    <!-- Game area: 禅修地图 Level 1 — 感受世界 -->
+    <div class="game-area" id="zmLevel1" style="display:none">
+      <div class="gc-back-bar">
+        <button class="game-back" id="zmBackL1">← 回到地图</button>
+        <h2 class="gc-level-title">感受世界</h2>
+      </div>
+      <p class="gc-l1-desc" id="zmL1Desc">选好你要感受的感官（可多选），然后点「开始感受」。</p>
+
+      <div class="gc-sense-grid" id="zmL1Grid"></div>
+
+      <div class="gc-l1-ready" id="zmL1Ready" style="display:none">
+        <button class="gc-ready-btn" id="zmL1Go">开始感受 →</button>
+      </div>
+
+      <!-- Practicing state -->
+      <div class="sg-current" id="zmL1Timer" style="display:none">
+        <div class="sg-current-label">正在感受</div>
+        <div class="sg-current-sense" id="zmL1TimerText"></div>
+        <div class="sg-timer-bar-wrap">
+          <div class="sg-timer-bar-fill" id="zmL1TimerFill"></div>
+        </div>
+        <div class="sg-timer-text" id="zmL1TimerCount">15s</div>
+        <div class="sg-controls">
+          <button class="sg-skip-btn" id="zmL1SkipBtn">跳过剩余时间</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level complete modal (reused by both) -->
+    <div class="gc-modal" id="gcModal" style="display:none">
+      <div class="gc-modal-bg" id="gcModalBg"></div>
+      <div class="gc-modal-box">
+        <div class="sg-complete-icon">🧘</div>
+        <div class="sg-complete-title" id="gcModalTitle">感受世界 · 完成</div>
+        <p class="gc-modal-desc">修行不是一次性搞懂什么，是每天回来一下。</p>
+        <div class="gc-modal-collected" id="gcModalCollected"></div>
+        <button class="sg-restart-btn" id="gcModalBtn">回到地图</button>
+      </div>
     </div>
 
   </main>
@@ -75,7 +120,9 @@
 
   <script>
     (function () {
-      // ── 深色模式 ─────────────────────────────
+      /* ════════════════════════════════════
+         公共：深色模式 & 导航三点菜单
+         ════════════════════════════════════ */
       var btn = document.getElementById('themeToggle');
       if (btn) {
         if (localStorage.getItem('theme') === 'dark') {
@@ -89,167 +136,145 @@
         });
       }
 
-      // ── 状态 ─────────────────────────────────
-      var currentGame = null;
-      var questionCards = [];
-      var currentIndex = 0;
-      var totalQuestions = 0;
+      (function () {
+        var menuBtn = document.getElementById('navMenuBtn');
+        var menuDropdown = document.getElementById('navDropdown');
+        if (!menuBtn || !menuDropdown) return;
+        menuBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          menuDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', function () {
+          menuDropdown.classList.remove('open');
+        });
+        menuDropdown.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+      })();
 
-      // ── DOM 引用 ─────────────────────────────
-      var selectorEl = document.getElementById('gameSelector');
-      var gameAreaEl = document.getElementById('gameArea');
-      var gameNameEl = document.getElementById('gameName');
-      var gameDescEl = document.getElementById('gameDesc');
-      var questionsWrap = document.getElementById('questionsWrap');
-      var gameBack = document.getElementById('gameBack');
-      var progressEl = document.getElementById('qProgress');
+      /* ════════════════════════════════════
+         模块 1：「花里胡哨答题」
+         ════════════════════════════════════ */
+      var qaState = {
+        currentGame: null,
+        cards: [],
+        currentIndex: 0,
+        total: 0
+      };
 
-      // ── 加载游戏 ─────────────────────────────
-      function loadGame(gameName) {
-        currentGame = gameName;
-        selectorEl.style.display = 'none';
-        gameAreaEl.style.display = 'block';
+      var qaArea = document.getElementById('qaArea');
+      var qaName = document.getElementById('qaName');
+      var qaDesc = document.getElementById('qaDesc');
+      var qaWrap = document.getElementById('qaWrap');
+      var qaProgress = document.getElementById('qaProgress');
+      var qaBack = document.getElementById('qaBack');
 
+      function qaLoadGame(gameName) {
+        qaState.currentGame = gameName;
+        showArea('qa');
         var url = 'games/' + encodeURIComponent(gameName) + '.json';
         fetch(url + '?t=' + Date.now())
-          .then(function (r) {
-            if (!r.ok) throw new Error('加载失败');
-            return r.json();
-          })
-          .then(function (data) {
-            renderGame(data);
-          })
+          .then(function (r) { if (!r.ok) throw new Error('加载失败'); return r.json(); })
+          .then(function (data) { qaRender(data); })
           .catch(function (err) {
-            questionsWrap.innerHTML = '<p class="game-error">加载失败：' + err.message + '</p>';
+            qaWrap.innerHTML = '<p class="game-error">加载失败：' + err.message + '</p>';
           });
       }
 
-      // ── 渲染游戏 ─────────────────────────────
-      function renderGame(data) {
-        gameNameEl.textContent = data.game;
-        gameDescEl.textContent = data.desc || '';
-        questionsWrap.innerHTML = '';
-        questionCards = [];
-        currentIndex = 0;
-        totalQuestions = data.questions.length;
-
-        // 进度指示
-        updateProgress();
-
-        // 创建所有卡片，但只显示第一张
+      function qaRender(data) {
+        qaName.textContent = data.game;
+        qaDesc.textContent = data.desc || '';
+        qaWrap.innerHTML = '';
+        qaState.cards = [];
+        qaState.currentIndex = 0;
+        qaState.total = data.questions.length;
+        qaUpdateProgress();
         data.questions.forEach(function (q, index) {
-          var card = buildCard(q, index);
-          if (index > 0) {
-            card.style.display = 'none';
-          }
-          questionsWrap.appendChild(card);
-          questionCards.push(card);
+          var card = qaBuildCard(q, index);
+          if (index > 0) card.style.display = 'none';
+          qaWrap.appendChild(card);
+          qaState.cards.push(card);
         });
       }
 
-      // ── 构建单张卡片 ─────────────────────────
-      function buildCard(q, index) {
+      function qaBuildCard(q, index) {
         var card = document.createElement('div');
         card.className = 'question-card fade-up';
         card.id = 'card_' + index;
 
-        // 题目文字
         var title = document.createElement('p');
         title.className = 'q-title';
         title.textContent = (index + 1) + '. ' + q.title;
         card.appendChild(title);
 
-        // 图片
         if (q.image) {
-          var imgWrap = document.createElement('div');
-          imgWrap.className = 'q-img-wrap';
+          var iw = document.createElement('div');
+          iw.className = 'q-img-wrap';
           var img = document.createElement('img');
           img.className = 'q-img';
           img.src = q.image;
           img.alt = '题目配图';
           img.loading = 'lazy';
-          imgWrap.appendChild(img);
-          card.appendChild(imgWrap);
+          iw.appendChild(img);
+          card.appendChild(iw);
         }
 
-        // 选项
-        var optionsDiv = document.createElement('div');
-        optionsDiv.className = 'q-options';
-
-        var selectedVal = '';
-        var inputVal = '';
+        var optDiv = document.createElement('div');
+        optDiv.className = 'q-options';
+        var selectedVal = '', inputVal = '';
 
         q.options.forEach(function (opt) {
           if (opt.type === 'radio') {
             var label = document.createElement('label');
             label.className = 'q-option';
-
             var radio = document.createElement('input');
             radio.type = 'radio';
             radio.name = 'q_' + q.id;
             radio.value = opt.label;
-
             var span = document.createElement('span');
             span.textContent = opt.label;
-
             label.appendChild(radio);
             label.appendChild(span);
-            optionsDiv.appendChild(label);
-
-            radio.addEventListener('change', function () {
-              selectedVal = opt.label;
-            });
+            optDiv.appendChild(label);
+            radio.addEventListener('change', function () { selectedVal = opt.label; });
           } else if (opt.type === 'input') {
-            var inputWrap = document.createElement('div');
-            inputWrap.className = 'q-input-wrap';
-            var input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'q-input';
-            input.placeholder = '输入你的答案…';
-            inputWrap.appendChild(input);
-            optionsDiv.appendChild(inputWrap);
-
-            input.addEventListener('input', function () {
-              inputVal = input.value.trim();
-            });
+            var iw = document.createElement('div');
+            iw.className = 'q-input-wrap';
+            var inp = document.createElement('input');
+            inp.type = 'text';
+            inp.className = 'q-input';
+            inp.placeholder = '输入你的答案…';
+            iw.appendChild(inp);
+            optDiv.appendChild(iw);
+            inp.addEventListener('input', function () { inputVal = inp.value.trim(); });
           }
         });
+        card.appendChild(optDiv);
 
-        card.appendChild(optionsDiv);
-
-        // 提交按钮
         var submitBtn = document.createElement('button');
         submitBtn.className = 'q-submit';
         submitBtn.textContent = '提交答案';
         card.appendChild(submitBtn);
 
-        // 结果区
         var resultDiv = document.createElement('div');
         resultDiv.className = 'q-result';
         resultDiv.style.display = 'none';
         card.appendChild(resultDiv);
 
-        // "下一题" 按钮（提交后才出现）
         var nextBtn = document.createElement('button');
         nextBtn.className = 'q-next-btn';
         nextBtn.style.display = 'none';
-
-        var isLast = (index === totalQuestions - 1);
+        var isLast = (index === data.questions.length - 1);
         if (isLast) {
           nextBtn.textContent = '完成 ✓';
-          nextBtn.addEventListener('click', function () {
-            // 回到游戏选择
-            goBackToSelector();
-          });
+          nextBtn.addEventListener('click', function () { qaGoBackSelector(); });
         } else {
           nextBtn.textContent = '下一题 →';
-          nextBtn.addEventListener('click', function () {
-            showQuestion(index + 1);
-          });
+          nextBtn.addEventListener('click', function () { qaShowQ(index + 1); });
         }
         card.appendChild(nextBtn);
 
-        // ── 提交逻辑 ─────────────────────────
         submitBtn.addEventListener('click', function () {
           var answer = selectedVal || inputVal;
           if (!answer) {
@@ -261,485 +286,298 @@
             }, 1800);
             return;
           }
-
-          // 显示结果
-          var resultHtml = '';
-          resultHtml += '<div class="q-result-col">';
-          resultHtml += '  <div class="q-result-label">你的答案</div>';
-          resultHtml += '  <div class="q-result-box q-result-user">' + escapeHtml(answer) + '</div>';
-          resultHtml += '</div>';
-          resultHtml += '<div class="q-result-divider"></div>';
-          resultHtml += '<div class="q-result-col">';
-          resultHtml += '  <div class="q-result-label">梁飞飞的答案</div>';
-          resultHtml += '  <div class="q-result-box q-result-mine">' + escapeHtml(q.myAnswer) + '</div>';
-          resultHtml += '</div>';
-
-          resultDiv.innerHTML = resultHtml;
+          resultDiv.innerHTML =
+            '<div class="q-result-col"><div class="q-result-label">你的答案</div><div class="q-result-box q-result-user">' + esc(answer) + '</div></div>' +
+            '<div class="q-result-divider"></div>' +
+            '<div class="q-result-col"><div class="q-result-label">梁飞飞的答案</div><div class="q-result-box q-result-mine">' + esc(q.myAnswer) + '</div></div>';
           resultDiv.style.display = 'flex';
           submitBtn.style.display = 'none';
-
-          // 显示"下一题"按钮
           nextBtn.style.display = 'inline-block';
-
-          // 禁用选项
-          var radios = card.querySelectorAll('input[type="radio"]');
-          for (var i = 0; i < radios.length; i++) {
-            radios[i].disabled = true;
-          }
-          var inputs = card.querySelectorAll('.q-input');
-          for (var i = 0; i < inputs.length; i++) {
-            inputs[i].disabled = true;
-          }
-
-          // 记录答案
-          saveAnswer(q.id, answer);
+          card.querySelectorAll('input[type="radio"]').forEach(function (r) { r.disabled = true; });
+          card.querySelectorAll('.q-input').forEach(function (r) { r.disabled = true; });
+          qaSaveAnswer(q.id, answer);
         });
 
         return card;
       }
 
-      // ── 切换题目 ─────────────────────────────
-      function showQuestion(index) {
-        // 隐藏当前卡片
-        if (currentIndex >= 0 && currentIndex < questionCards.length) {
-          questionCards[currentIndex].style.display = 'none';
-        }
-        // 显示目标卡片
-        currentIndex = index;
-        var card = questionCards[currentIndex];
+      function qaShowQ(index) {
+        if (qaState.currentIndex >= 0 && qaState.currentIndex < qaState.cards.length)
+          qaState.cards[qaState.currentIndex].style.display = 'none';
+        qaState.currentIndex = index;
+        var card = qaState.cards[index];
         card.style.display = '';
-        // 重新触发动画
         card.classList.remove('fade-up');
-        void card.offsetWidth; // 强制回流
+        void card.offsetWidth;
         card.classList.add('fade-up');
-        // 更新进度
-        updateProgress();
+        qaUpdateProgress();
       }
 
-      // ── 进度指示 ─────────────────────────────
-      function updateProgress() {
-        if (!totalQuestions) return;
+      function qaUpdateProgress() {
+        if (!qaState.total) return;
         var html = '<div class="q-progress-dots">';
-        for (var i = 0; i < totalQuestions; i++) {
-          var cls = (i === currentIndex) ? 'q-dot active' : 'q-dot';
-          if (i < currentIndex) cls += ' done';
-          html += '<span class="' + cls + '" data-index="' + i + '"></span>';
+        for (var i = 0; i < qaState.total; i++) {
+          var cls = (i === qaState.currentIndex) ? 'q-dot active' : 'q-dot';
+          if (i < qaState.currentIndex) cls += ' done';
+          html += '<span class="' + cls + '" data-idx="' + i + '"></span>';
         }
-        html += '</div>';
-        html += '<span class="q-progress-hint">点击圆点跳题</span>';
-        progressEl.innerHTML = html;
-
-        // 绑定点击跳转
-        var dots = progressEl.querySelectorAll('.q-dot');
-        for (var j = 0; j < dots.length; j++) {
-          dots[j].addEventListener('click', function (e) {
-            var idx = parseInt(this.dataset.index);
-            if (!isNaN(idx)) {
-              showQuestion(idx);
-            }
+        html += '</div><span class="q-progress-hint">点击圆点跳题</span>';
+        qaProgress.innerHTML = html;
+        qaProgress.querySelectorAll('.q-dot').forEach(function (d) {
+          d.addEventListener('click', function () {
+            var idx = parseInt(this.dataset.idx);
+            if (!isNaN(idx)) qaShowQ(idx);
           });
-        }
+        });
       }
 
-      // ── 返回游戏选择 ─────────────────────────
-      function goBackToSelector() {
-        currentGame = null;
-        gameAreaEl.style.display = 'none';
-        selectorEl.style.display = 'block';
-        questionsWrap.innerHTML = '';
-        questionCards = [];
-        currentIndex = 0;
+      function qaGoBackSelector() {
+        qaState.currentGame = null;
+        showArea('selector');
+        qaWrap.innerHTML = '';
+        qaState.cards = [];
+        qaState.currentIndex = 0;
       }
 
-      // ── 记录答案（当前用 localStorage） ───────
-      function saveAnswer(questionId, answer) {
-        var payload = {
-          questionId: questionId,
-          answer: answer,
-          timestamp: new Date().toISOString()
-        };
-        var key = 'game_answers_' + questionId;
+      function qaSaveAnswer(qid, answer) {
+        var key = 'game_answers_' + qid;
         var stored = [];
-        try {
-          var raw = localStorage.getItem(key);
-          if (raw) stored = JSON.parse(raw);
-        } catch(e) {}
-        stored.push(payload);
-        try {
-          localStorage.setItem(key, JSON.stringify(stored));
-        } catch(e) {}
+        try { var raw = localStorage.getItem(key); if (raw) stored = JSON.parse(raw); } catch(e){}
+        stored.push({ questionId: qid, answer: answer, ts: new Date().toISOString() });
+        try { localStorage.setItem(key, JSON.stringify(stored)); } catch(e){}
       }
 
-      // ── HTML 转义 ───────────────────────────
-      function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
+      function esc(s) {
+        var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML;
       }
 
-      // ── 返回游戏选择（按钮） ─────────────────
-      gameBack.addEventListener('click', function () {
-        // 清理感官游戏计时器（如果有）
-        if (sgTimer) {
-          clearInterval(sgTimer);
-          sgTimer = null;
+      qaBack.addEventListener('click', function () { qaGoBackSelector(); });
+
+      /* ════════════════════════════════════
+         模块 2：「禅修地图」
+         ════════════════════════════════════ */
+      var zmState = {
+        level: -1,        // -1=entry, 1=L1
+        l1Collected: [],  // collected sense indices
+        l1Timer: null
+      };
+
+      var SENSES = [
+        { id: 'see',   emoji: '👀', name: '看', desc: '看看你眼前的东西，注意颜色、形状、光线' },
+        { id: 'smell', emoji: '👃', name: '闻', desc: '闻一闻周围的气味，淡淡的也好' },
+        { id: 'taste', emoji: '👅', name: '尝', desc: '感受口中的味道，或者喝一口水' },
+        { id: 'touch', emoji: '✋', name: '触', desc: '感受身体的触感，衣服、温度、坐姿' },
+        { id: 'hear',  emoji: '👂', name: '听', desc: '听听周围的声音，近的和远的' }
+      ];
+
+      var zmEntry = document.getElementById('zmEntry');
+      var zmLevels = document.getElementById('zmLevels');
+      var zmLevel1 = document.getElementById('zmLevel1');
+
+      function zmShowEntry() {
+        showArea('zmEntry');
+        zmState.level = -1;
+        var html =
+          '<div class="gc-level-card done" data-level="1">' +
+            '<div class="gc-level-emoji">🌍</div>' +
+            '<div class="gc-level-name">感受世界</div>' +
+            '<div class="gc-level-done">未完成</div>' +
+          '</div>' +
+          '<div class="gc-level-card locked" data-level="2">' +
+            '<div class="gc-level-emoji">?</div>' +
+            '<div class="gc-level-name">未解锁</div>' +
+            '<div class="gc-level-done">——</div>' +
+          '</div>';
+        zmLevels.innerHTML = html;
+        zmLevels.querySelectorAll('.gc-level-card[data-level="1"]').forEach(function (c) {
+          c.addEventListener('click', function () { zmOpenL1(); });
+        });
+        // update "done" label if L1 all collected
+        if (zmState.l1Collected.length >= 5) {
+          zmLevels.querySelector('.gc-level-card[data-level="1"] .gc-level-done').textContent = '✓ 已完成';
         }
-        sgRunning = false;
-        goBackToSelector();
+      }
+
+      function zmOpenL1() {
+        zmState.level = 1;
+        zmState.l1Collected = [];
+        showArea('zmLevel1');
+        document.getElementById('zmL1Desc').textContent = '选好你要感受的感官（可多选），然后点「开始感受」。';
+        document.getElementById('zmL1Ready').style.display = 'none';
+        document.getElementById('zmL1Timer').style.display = 'none';
+
+        var gridHtml = '';
+        SENSES.forEach(function (s, i) {
+          gridHtml +=
+            '<div class="gc-sense-btn" data-idx="' + i + '">' +
+              '<span class="gc-sense-emoji">' + s.emoji + '</span>' +
+              '<span class="gc-sense-name">' + s.name + '</span>' +
+              '<span class="gc-sense-check"></span>' +
+            '</div>';
+        });
+        document.getElementById('zmL1Grid').innerHTML = gridHtml;
+
+        document.querySelectorAll('.gc-sense-btn').forEach(function (el) {
+          el.addEventListener('click', function () {
+            el.classList.toggle('selected');
+            zmUpdateL1Ready();
+          });
+        });
+        zmUpdateL1Ready();
+      }
+
+      function zmGetL1Selected() {
+        var sel = [];
+        document.querySelectorAll('.gc-sense-btn.selected').forEach(function (el) {
+          sel.push(parseInt(el.dataset.idx));
+        });
+        return sel;
+      }
+
+      function zmUpdateL1Ready() {
+        var sel = zmGetL1Selected();
+        document.getElementById('zmL1Ready').style.display = sel.length > 0 ? 'flex' : 'none';
+      }
+
+      document.getElementById('zmL1Go').addEventListener('click', function () {
+        var sel = zmGetL1Selected();
+        if (sel.length === 0) return;
+        document.getElementById('zmL1Desc').textContent = '感受正在进行中…';
+        document.getElementById('zmL1Grid').style.display = 'none';
+        document.getElementById('zmL1Ready').style.display = 'none';
+        document.getElementById('zmL1Timer').style.display = 'block';
+        zmStartL1Practice(sel);
       });
 
-      // ── 选择游戏 ─────────────────────────────
+      function zmStartL1Practice(indices) {
+        var text = indices.map(function (i) { return SENSES[i].emoji + ' ' + SENSES[i].name; }).join(' ＋ ');
+        document.getElementById('zmL1TimerText').textContent = text;
+        document.getElementById('zmL1TimerFill').style.width = '100%';
+        document.getElementById('zmL1TimerCount').textContent = '15s';
+
+        if (zmState.l1Timer) { clearInterval(zmState.l1Timer); zmState.l1Timer = null; }
+
+        var rem = 15;
+        zmState.l1Timer = setInterval(function () {
+          rem--;
+          if (rem <= 0) {
+            clearInterval(zmState.l1Timer);
+            zmState.l1Timer = null;
+            zmDoneL1Practice(indices);
+          } else {
+            document.getElementById('zmL1TimerFill').style.width = (rem / 15 * 100) + '%';
+            document.getElementById('zmL1TimerCount').textContent = rem + 's';
+          }
+        }, 1000);
+      }
+
+      function zmDoneL1Practice(indices) {
+        indices.forEach(function (idx) {
+          if (zmState.l1Collected.indexOf(idx) === -1) zmState.l1Collected.push(idx);
+        });
+        try { navigator.vibrate(60); } catch(e) {}
+        document.getElementById('zmL1TimerCount').textContent = '✓';
+        setTimeout(function () { zmShowL1Modal(indices); }, 800);
+      }
+
+      function zmShowL1Modal() {
+        var allDone = zmState.l1Collected.length >= 5;
+        document.getElementById('gcModalTitle').textContent = allDone ? '感受世界 · 完成' : '感官收获';
+        document.getElementById('gcModalBtn').textContent = allDone ? '回到地图' : '继续感受世界';
+
+        var colHtml = '';
+        zmState.l1Collected.forEach(function (idx) {
+          var s = SENSES[idx];
+          colHtml += '<div class="gc-collect-card">' + s.emoji + ' ' + s.name + '</div>';
+        });
+        document.getElementById('gcModalCollected').innerHTML = colHtml;
+
+        document.getElementById('gcModal').style.display = 'block';
+        document.getElementById('zmL1Timer').style.display = 'none';
+      }
+
+      document.getElementById('gcModalBtn').addEventListener('click', function () {
+        document.getElementById('gcModal').style.display = 'none';
+        var allDone = zmState.l1Collected.length >= 5;
+        if (allDone) {
+          zmShowEntry();
+        } else {
+          zmOpenL1Again();
+        }
+      });
+
+      function zmOpenL1Again() {
+        showArea('zmLevel1');
+        document.getElementById('zmL1Desc').textContent = '继续感受还未收集的感官～';
+        document.getElementById('zmL1Timer').style.display = 'none';
+        document.getElementById('zmL1Ready').style.display = 'none';
+
+        var gridHtml = '';
+        SENSES.forEach(function (s, i) {
+          var cls = 'gc-sense-btn';
+          if (zmState.l1Collected.indexOf(i) !== -1) cls += ' done';
+          gridHtml +=
+            '<div class="' + cls + '" data-idx="' + i + '">' +
+              '<span class="gc-sense-emoji">' + s.emoji + '</span>' +
+              '<span class="gc-sense-name">' + s.name + '</span>' +
+              '<span class="gc-sense-check">' + (zmState.l1Collected.indexOf(i) !== -1 ? '✓' : '') + '</span>' +
+            '</div>';
+        });
+        document.getElementById('zmL1Grid').innerHTML = gridHtml;
+
+        document.querySelectorAll('.gc-sense-btn:not(.done)').forEach(function (el) {
+          el.addEventListener('click', function () {
+            el.classList.toggle('selected');
+            zmUpdateL1Ready();
+          });
+        });
+        zmUpdateL1Ready();
+      }
+
+      document.getElementById('zmL1SkipBtn').addEventListener('click', function () {
+        if (zmState.l1Timer) { clearInterval(zmState.l1Timer); zmState.l1Timer = null; }
+        zmDoneL1Practice(zmGetL1Selected());
+      });
+
+      document.getElementById('zmBackL1').addEventListener('click', function () {
+        if (zmState.l1Timer) { clearInterval(zmState.l1Timer); zmState.l1Timer = null; }
+        zmShowEntry();
+      });
+
+      document.getElementById('zmBackEntry').addEventListener('click', function () {
+        showArea('selector');
+      });
+
+      /* ════════════════════════════════════
+         公共工具：显示指定区域
+         ════════════════════════════════════ */
+      function showArea(area) {
+        document.getElementById('gameSelector').style.display = area === 'selector' ? 'block' : 'none';
+        qaArea.style.display = area === 'qa' ? 'block' : 'none';
+        zmEntry.style.display = area === 'zmEntry' ? 'block' : 'none';
+        zmLevel1.style.display = area === 'zmLevel1' ? 'block' : 'none';
+      }
+
+      /* ════════════════════════════════════
+         入口：游戏选择按钮
+         ════════════════════════════════════ */
       var gameBtns = document.querySelectorAll('.game-btn');
       gameBtns.forEach(function (b) {
         b.addEventListener('click', function () {
           gameBtns.forEach(function (x) { x.classList.remove('active'); });
           b.classList.add('active');
-
           var name = b.dataset.game;
-          if (name === '感官打卡') {
-            startSensoryGame();
+          if (name === '禅修地图') {
+            zmShowEntry();
           } else {
-            loadGame(name);
+            qaLoadGame(name);
           }
         });
       });
 
-      // ════════════════════════════════════════
-      //  感官打卡
-      // ════════════════════════════════════════
+      // 默认选中第一个按钮
+      if (gameBtns.length > 0) gameBtns[0].classList.add('active');
 
-      var SENSES = [
-        { id: 'see',   emoji: '👁', name: '看',  desc: '看看你眼前的东西，注意颜色、形状、光线' },
-        { id: 'smell', emoji: '👃', name: '闻',  desc: '闻一闻周围的气味，淡淡的也好' },
-        { id: 'taste', emoji: '👅', name: '尝',  desc: '感受口中的味道，或者喝一口水' },
-        { id: 'touch', emoji: '✋', name: '触',  desc: '感受身体的触感，衣服、温度、坐姿' },
-        { id: 'hear',  emoji: '👂', name: '听',  desc: '听听周围的声音，近的和远的' }
-      ];
-
-      var PAIRS = [
-        { senses: [0, 4], label: '看 + 听', desc: '同时看和听，注意两种感官的体验' },
-        { senses: [1, 2], label: '闻 + 尝', desc: '感受气味与味道的交织' },
-        { senses: [3, 0], label: '触 + 看', desc: '感受触觉的同时继续看' },
-        { senses: [4, 3], label: '听 + 触', desc: '边听边感受身体的存在' },
-        { senses: [1, 4], label: '闻 + 听', desc: '边闻边听，两个感官同时打开' }
-      ];
-
-      var TRIPLES = [
-        { senses: [0, 4, 3], label: '看 + 听 + 触', desc: '同时留意视觉、听觉和触觉' },
-        { senses: [1, 2, 3], label: '闻 + 尝 + 触', desc: '气味、味道和身体的感受' },
-        { senses: [0, 1, 4], label: '看 + 闻 + 听', desc: '看、闻、听三种感官同时打开' }
-      ];
-
-      var TIMER_SEC = 15;
-      var sgTimer = null;
-      var sgRemaining = 0;
-      var sgMode = '';
-      var sgTasks = [];
-      var sgCurrentTask = -1;
-      var sgCompleted = [];
-      var sgRunning = false;
-
-      // ── 启动感官游戏 ─────────────────────────
-      function startSensoryGame() {
-        // 清理答题游戏状态
-        questionCards = [];
-        currentIndex = 0;
-        totalQuestions = 0;
-
-        currentGame = '感官打卡';
-        selectorEl.style.display = 'none';
-        gameAreaEl.style.display = 'block';
-        gameNameEl.textContent = '感官打卡';
-        gameDescEl.textContent = '把注意力带到你的感官上，一个一个地感受它们。';
-        questionsWrap.innerHTML = '';
-
-        renderSensoryModeSelect();
-      }
-
-      // ── 模式选择 ─────────────────────────────
-      function renderSensoryModeSelect() {
-        questionsWrap.innerHTML =
-          '<div class="sg-mode-select">' +
-            '<button class="sg-mode-btn" data-mode="single">' +
-              '<span class="sg-mode-btn-label">逐个感官</span>' +
-              '<span class="sg-mode-btn-desc">依次专注 5 个感官，每个 15 秒</span>' +
-            '</button>' +
-            '<button class="sg-mode-btn" data-mode="pair">' +
-              '<span class="sg-mode-btn-label">两两组合</span>' +
-              '<span class="sg-mode-btn-desc">5 组配对，同时注意两个感官</span>' +
-            '</button>' +
-            '<button class="sg-mode-btn" data-mode="triple">' +
-              '<span class="sg-mode-btn-label">三三组合</span>' +
-              '<span class="sg-mode-btn-desc">3 组，同时打开三个感官</span>' +
-            '</button>' +
-          '</div>';
-
-        questionsWrap.querySelectorAll('.sg-mode-btn').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            sgStartMode(btn.dataset.mode);
-          });
-        });
-      }
-
-      // ── 开始某个模式 ─────────────────────────
-      function sgStartMode(mode) {
-        sgMode = mode;
-        sgCompleted = [];
-        sgCurrentTask = -1;
-        sgRunning = false;
-
-        if (mode === 'single') {
-          sgTasks = SENSES.map(function (s, i) {
-            return { type: 'single', senseIndex: i, label: s.emoji + ' ' + s.name, desc: s.desc };
-          });
-        } else if (mode === 'pair') {
-          sgTasks = PAIRS.map(function (p) {
-            return { type: 'pair', senseIndices: p.senses, label: p.label, desc: p.desc };
-          });
-        } else {
-          sgTasks = TRIPLES.map(function (t) {
-            return { type: 'triple', senseIndices: t.senses, label: t.label, desc: t.desc };
-          });
-        }
-
-        renderSensoryGrid();
-        sgStartTask(0);
-      }
-
-      // ── 渲染感官网格 + 计时区 ────────────────
-      function renderSensoryGrid() {
-        // 感官网格
-        var gridHtml = '<div class="sg-senses">';
-        SENSES.forEach(function (s, i) {
-          var cls = 'sg-sense';
-          gridHtml +=
-            '<div class="' + cls + '" data-index="' + i + '">' +
-              '<span class="sg-sense-emoji">' + s.emoji + '</span>' +
-              '<span class="sg-sense-name">' + s.name + '</span>' +
-              '<span class="sg-sense-check"></span>' +
-            '</div>';
-        });
-        gridHtml += '</div>';
-
-        // 当前任务
-        gridHtml +=
-          '<div class="sg-current">' +
-            '<div class="sg-current-label">当前</div>' +
-            '<div class="sg-current-sense" id="sgCurrentSense"></div>' +
-            '<div class="sg-current-mode-name" id="sgCurrentModeName"></div>' +
-            '<div class="sg-current-desc" id="sgCurrentDesc"></div>' +
-            '<div class="sg-timer-bar-wrap">' +
-              '<div class="sg-timer-bar-fill" id="sgTimerFill"></div>' +
-            '</div>' +
-            '<div class="sg-timer-text" id="sgTimerText">15s</div>' +
-            '<div class="sg-controls">' +
-              '<button class="sg-skip-btn" id="sgSkipBtn">跳过剩余时间</button>' +
-            '</div>' +
-          '</div>';
-
-        // 进度（用已有样式）
-        var progressHtml = '<div class="q-progress" style="border-bottom:none;margin-bottom:0;padding-bottom:0">';
-        progressHtml += '<div class="q-progress-dots">';
-        for (var i = 0; i < sgTasks.length; i++) {
-          var cls = 'q-dot' + (i === sgCurrentTask ? ' active' : '');
-          progressHtml += '<span class="' + cls + '"></span>';
-        }
-        progressHtml += '</div></div>';
-
-        questionsWrap.innerHTML = progressHtml + gridHtml;
-      }
-
-      // ── 开始第 index 个任务 ──────────────────
-      function sgStartTask(index) {
-        if (index >= sgTasks.length) {
-          sgFinish();
-          return;
-        }
-
-        sgCurrentTask = index;
-        sgRunning = true;
-        sgRemaining = TIMER_SEC;
-
-        var task = sgTasks[index];
-
-        // 更新感官网格状态
-        var senseEls = document.querySelectorAll('.sg-sense');
-        senseEls.forEach(function (el) {
-          el.classList.remove('active');
-        });
-
-        // 更新当前任务显示
-        var senseText = '';
-        if (task.type === 'single') {
-          var s = SENSES[task.senseIndex];
-          senseText = s.emoji + ' ' + s.name;
-          document.getElementById('sgCurrentModeName').textContent = '';
-          senseEls[task.senseIndex].classList.add('active');
-        } else {
-          senseText = task.label;
-          document.getElementById('sgCurrentModeName').textContent =
-            sgMode === 'pair' ? '两两组合' : '三三组合';
-          task.senseIndices.forEach(function (idx) {
-            if (senseEls[idx]) senseEls[idx].classList.add('active');
-          });
-        }
-
-        document.getElementById('sgCurrentSense').textContent = senseText;
-        document.getElementById('sgCurrentDesc').textContent = task.desc;
-
-        // 更新进度
-        updateSensoryProgress();
-
-        // 重置计时器显示
-        document.getElementById('sgTimerFill').style.width = '100%';
-        document.getElementById('sgTimerText').textContent = TIMER_SEC + 's';
-
-        // 清除旧计时器
-        if (sgTimer) {
-          clearInterval(sgTimer);
-          sgTimer = null;
-        }
-
-        // 启动新计时器
-        sgTimer = setInterval(function () {
-          sgRemaining--;
-          if (sgRemaining <= 0) {
-            clearInterval(sgTimer);
-            sgTimer = null;
-            sgCompleteTask();
-          } else {
-            var pct = (sgRemaining / TIMER_SEC) * 100;
-            document.getElementById('sgTimerFill').style.width = pct + '%';
-            document.getElementById('sgTimerText').textContent = sgRemaining + 's';
-          }
-        }, 1000);
-
-        // 跳过按钮
-        var skipBtn = document.getElementById('sgSkipBtn');
-
-        // 先解绑旧监听器（替换副本）
-        var newSkip = skipBtn.cloneNode(true);
-        skipBtn.parentNode.replaceChild(newSkip, skipBtn);
-        newSkip.addEventListener('click', function () {
-          if (sgRunning && sgTimer) {
-            clearInterval(sgTimer);
-            sgTimer = null;
-            sgCompleteTask();
-          }
-        });
-      }
-
-      // ── 完成当前任务 ─────────────────────────
-      function sgCompleteTask() {
-        sgRunning = false;
-
-        var task = sgTasks[sgCurrentTask];
-
-        // 标记已完成的感官
-        if (task.type === 'single') {
-          if (sgCompleted.indexOf(task.senseIndex) === -1) {
-            sgCompleted.push(task.senseIndex);
-          }
-          var el = document.querySelector('.sg-sense[data-index="' + task.senseIndex + '"]');
-          if (el) {
-            el.classList.remove('active');
-            el.classList.add('done');
-            el.querySelector('.sg-sense-check').textContent = '✓';
-          }
-        } else {
-          task.senseIndices.forEach(function (idx) {
-            if (sgCompleted.indexOf(idx) === -1) {
-              sgCompleted.push(idx);
-            }
-            var el = document.querySelector('.sg-sense[data-index="' + idx + '"]');
-            if (el) {
-              el.classList.remove('active');
-              el.classList.add('done');
-              el.querySelector('.sg-sense-check').textContent = '✓';
-            }
-          });
-        }
-
-        // 更新进度
-        updateSensoryProgress();
-
-        // 震动
-        try { navigator.vibrate(50); } catch(e) {}
-
-        // 更新计时显示
-        document.getElementById('sgTimerText').textContent = '✓';
-
-        // 自动进下一个
-        setTimeout(function () {
-          sgStartTask(sgCurrentTask + 1);
-        }, 600);
-      }
-
-      // ── 更新进度 ─────────────────────────────
-      function updateSensoryProgress() {
-        var dots = document.querySelectorAll('.q-progress-dots .q-dot');
-        if (!dots.length) return;
-        dots.forEach(function (d, i) {
-          d.className = 'q-dot';
-          if (i < sgCurrentTask) d.classList.add('done');
-          if (i === sgCurrentTask) d.classList.add('active');
-        });
-      }
-
-      // ── 完成 ─────────────────────────────────
-      function sgFinish() {
-        if (sgTimer) {
-          clearInterval(sgTimer);
-          sgTimer = null;
-        }
-
-        var desc = '';
-        var modeLabel = '个感官';
-        if (sgMode === 'single') modeLabel = '个感官逐个打卡完成';
-        else if (sgMode === 'pair') modeLabel = '组两两组合完成';
-        else modeLabel = '组三三组合完成';
-
-        // 收集完成总结
-        var summaryHtml = '';
-        sgCompleted.forEach(function (idx) {
-          var s = SENSES[idx];
-          summaryHtml += '<span class="sg-complete-sense">' + s.emoji + ' ' + s.name + '</span>';
-        });
-
-        questionsWrap.innerHTML =
-          '<div class="sg-complete">' +
-            '<div class="sg-complete-icon">🧘</div>' +
-            '<div class="sg-complete-title">' + sgTasks.length + ' ' + modeLabel + '</div>' +
-            '<div class="sg-complete-desc">你把注意力带回了身体，这就是修行的开始。</div>' +
-            '<div class="sg-complete-summary">' + summaryHtml + '</div>' +
-            '<button class="sg-restart-btn" id="sgRestartBtn">再来一次</button>' +
-          '</div>';
-
-        document.getElementById('sgRestartBtn').addEventListener('click', function () {
-          renderSensoryModeSelect();
-        });
-      }
-
-      // ── 导航栏三点菜单 ─────────────────────
-      (function () {
-        var menuBtn = document.getElementById('navMenuBtn');
-        var menuDropdown = document.getElementById('navDropdown');
-        if (!menuBtn || !menuDropdown) return;
-
-        menuBtn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          e.preventDefault();
-          menuDropdown.classList.toggle('open');
-        });
-
-        document.addEventListener('click', function () {
-          menuDropdown.classList.remove('open');
-        });
-
-        menuDropdown.addEventListener('click', function (e) {
-          e.stopPropagation();
-        });
-      })();
     })();
   </script>
 
