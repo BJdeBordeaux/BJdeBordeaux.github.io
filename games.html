@@ -315,13 +315,26 @@
       // ── 进度指示 ─────────────────────────────
       function updateProgress() {
         if (!totalQuestions) return;
-        var html = '';
+        var html = '<div class="q-progress-dots">';
         for (var i = 0; i < totalQuestions; i++) {
           var cls = (i === currentIndex) ? 'q-dot active' : 'q-dot';
           if (i < currentIndex) cls += ' done';
-          html += '<span class="' + cls + '"></span>';
+          html += '<span class="' + cls + '" data-index="' + i + '"></span>';
         }
+        html += '</div>';
+        html += '<span class="q-progress-hint">点击圆点跳题</span>';
         progressEl.innerHTML = html;
+
+        // 绑定点击跳转
+        var dots = progressEl.querySelectorAll('.q-dot');
+        for (var j = 0; j < dots.length; j++) {
+          dots[j].addEventListener('click', function (e) {
+            var idx = parseInt(this.dataset.index);
+            if (!isNaN(idx)) {
+              showQuestion(idx);
+            }
+          });
+        }
       }
 
       // ── 返回游戏选择 ─────────────────────────
