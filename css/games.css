@@ -845,3 +845,52 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ── 已收集卡片（选关页） ───────────── */
+.zm-colleted-area {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.zm-colleted-title {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.zm-colleted-grid {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.zm-colleted-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(154, 181, 160, 0.25);
+  background: rgba(154, 181, 160, 0.05);
+}
+
+.zm-colleted-card-emoji {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.zm-colleted-card-name {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  font-weight: 300;
+}

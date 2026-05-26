@@ -449,6 +449,23 @@
         });
         html += '</div>';
 
+        // 已收集卡片区域
+        if (zmCollectedCards.length > 0) {
+          html += '<div class="zm-collected-area">';
+          html += '<h4 class="zm-collected-title">已收集卡片</h4>';
+          html += '<div class="zm-collected-grid">';
+          zmCollectedCards.forEach(function (combo) {
+            var emojiStr = combo.map(function (idx) { return SENSES[idx].emoji; }).join(' ');
+            var nameStr = combo.map(function (idx) { return SENSES[idx].name; }).join('+');
+            html += '<div class="zm-collected-card">';
+            html += '  <span class="zm-collected-card-emoji">' + emojiStr + '</span>';
+            html += '  <span class="zm-collected-card-name">' + nameStr + '</span>';
+            html += '</div>';
+          });
+          html += '</div>';
+          html += '</div>';
+        }
+
         questionsWrap.innerHTML = html;
 
         // 绑定关卡点击
