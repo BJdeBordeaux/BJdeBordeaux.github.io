@@ -41,9 +41,9 @@
           <span class="game-btn-icon">✨</span>
           花里胡哨答题
         </button>
-        <button class="game-btn" data-game="感官打卡">
+        <button class="game-btn" data-game="禅修地图">
           <span class="game-btn-icon">🧘</span>
-          感官打卡
+          禅修地图
         </button>
       </div>
       <p class="games-more">更多游戏，待续……</p>
@@ -110,6 +110,11 @@
         selectorEl.style.display = 'none';
         gameAreaEl.style.display = 'block';
 
+        if (gameName === '禅修地图') {
+          startZenMap();
+          return;
+        }
+
         var url = 'games/' + encodeURIComponent(gameName) + '.json';
         fetch(url + '?t=' + Date.now())
           .then(function (r) {
@@ -124,7 +129,7 @@
           });
       }
 
-      // ── 渲染游戏 ─────────────────────────────
+      // ── 渲染游戏（花里胡哨答题）─────────────────────────────
       function renderGame(data) {
         gameNameEl.textContent = data.game;
         gameDescEl.textContent = data.desc || '';
@@ -379,12 +384,6 @@
 
       // ── 返回游戏选择（按钮） ─────────────────
       gameBack.addEventListener('click', function () {
-        // 清理感官游戏计时器（如果有）
-        if (sgTimer) {
-          clearInterval(sgTimer);
-          sgTimer = null;
-        }
-        sgRunning = false;
         goBackToSelector();
       });
 
@@ -396,17 +395,18 @@
           b.classList.add('active');
 
           var name = b.dataset.game;
-          if (name === '感官打卡') {
-            startSensoryGame();
-          } else {
-            loadGame(name);
-          }
+          loadGame(name);
         });
       });
 
       // ════════════════════════════════════════
-      //  感官打卡
+      //  禅修地图
       // ════════════════════════════════════════
+
+      var ZEN_LEVELS = [
+        { id: 1, name: '感受世界', desc: '把注意力带到感官上，一个一个地感受它们', locked: false },
+        { id: 2, name: '待解锁', desc: '完成第一关后解锁', locked: true }
+      ];
 
       var SENSES = [
         { id: 'see',   emoji: '👁', name: '看',  desc: '看看你眼前的东西，注意颜色、形状、光线' },
@@ -416,307 +416,216 @@
         { id: 'hear',  emoji: '👂', name: '听',  desc: '听听周围的声音，近的和远的' }
       ];
 
-      var PAIRS = [
-        { senses: [0, 4], label: '看 + 听', desc: '同时看和听，注意两种感官的体验' },
-        { senses: [1, 2], label: '闻 + 尝', desc: '感受气味与味道的交织' },
-        { senses: [3, 0], label: '触 + 看', desc: '感受触觉的同时继续看' },
-        { senses: [4, 3], label: '听 + 触', desc: '边听边感受身体的存在' },
-        { senses: [1, 4], label: '闻 + 听', desc: '边闻边听，两个感官同时打开' }
-      ];
-
-      var TRIPLES = [
-        { senses: [0, 4, 3], label: '看 + 听 + 触', desc: '同时留意视觉、听觉和触觉' },
-        { senses: [1, 2, 3], label: '闻 + 尝 + 触', desc: '气味、味道和身体的感受' },
-        { senses: [0, 1, 4], label: '看 + 闻 + 听', desc: '看、闻、听三种感官同时打开' }
-      ];
-
       var TIMER_SEC = 15;
-      var sgTimer = null;
-      var sgRemaining = 0;
-      var sgMode = '';
-      var sgTasks = [];
-      var sgCurrentTask = -1;
-      var sgCompleted = [];
-      var sgRunning = false;
+      var zmTimer = null;
+      var zmRemaining = 0;
+      var zmRunning = false;
+      var zmCurrentSense = null;
+      var zmCollectedCards = [];
 
-      // ── 启动感官游戏 ─────────────────────────
-      function startSensoryGame() {
-        // 清理答题游戏状态
-        questionCards = [];
-        currentIndex = 0;
-        totalQuestions = 0;
-
-        currentGame = '感官打卡';
+      // ── 启动禅修地图 ─────────────────────────
+      function startZenMap() {
+        currentGame = '禅修地图';
         selectorEl.style.display = 'none';
         gameAreaEl.style.display = 'block';
-        gameNameEl.textContent = '感官打卡';
-        gameDescEl.textContent = '把注意力带到你的感官上，一个一个地感受它们。';
+        gameNameEl.textContent = '禅修地图';
+        gameDescEl.textContent = '通过一些练习，让你对禅修修行有一些领悟。';
         questionsWrap.innerHTML = '';
 
-        renderSensoryModeSelect();
+        renderZenMapLevels();
       }
 
-      // ── 模式选择 ─────────────────────────────
-      function renderSensoryModeSelect() {
-        questionsWrap.innerHTML =
-          '<div class="sg-mode-select">' +
-            '<button class="sg-mode-btn" data-mode="single">' +
-              '<span class="sg-mode-btn-label">逐个感官</span>' +
-              '<span class="sg-mode-btn-desc">依次专注 5 个感官，每个 15 秒</span>' +
-            '</button>' +
-            '<button class="sg-mode-btn" data-mode="pair">' +
-              '<span class="sg-mode-btn-label">两两组合</span>' +
-              '<span class="sg-mode-btn-desc">5 组配对，同时注意两个感官</span>' +
-            '</button>' +
-            '<button class="sg-mode-btn" data-mode="triple">' +
-              '<span class="sg-mode-btn-label">三三组合</span>' +
-              '<span class="sg-mode-btn-desc">3 组，同时打开三个感官</span>' +
-            '</button>' +
-          '</div>';
+      // ── 渲染关卡选择 ─────────────────────────
+      function renderZenMapLevels() {
+        var html = '<div class="zm-levels">';
+        html += '<h3 class="zm-levels-title">选择关卡</h3>';
+        ZEN_LEVELS.forEach(function (lv) {
+          var cls = 'zm-level' + (lv.locked ? ' locked' : '');
+          html += '<button class="' + cls + '" data-level="' + lv.id + '" ' + (lv.locked ? 'disabled' : '') + '>';
+          html += '  <span class="zm-level-icon">' + (lv.locked ? '🔒' : '🧘') + '</span>';
+          html += '  <span class="zm-level-name">' + lv.name + '</span>';
+          html += '  <span class="zm-level-desc">' + lv.desc + '</span>';
+          html += '</button>';
+        });
+        html += '</div>';
 
-        questionsWrap.querySelectorAll('.sg-mode-btn').forEach(function (btn) {
+        questionsWrap.innerHTML = html;
+
+        // 绑定关卡点击
+        questionsWrap.querySelectorAll('.zm-level:not(.locked)').forEach(function (btn) {
           btn.addEventListener('click', function () {
-            sgStartMode(btn.dataset.mode);
+            var levelId = parseInt(this.dataset.level);
+            if (levelId === 1) {
+              startZenLevel1();
+            }
           });
         });
       }
 
-      // ── 开始某个模式 ─────────────────────────
-      function sgStartMode(mode) {
-        sgMode = mode;
-        sgCompleted = [];
-        sgCurrentTask = -1;
-        sgRunning = false;
+      // ── 开始第一关：感受世界 ─────────────────
+      function startZenLevel1() {
+        zmCollectedCards = [];
+        zmRunning = false;
 
-        if (mode === 'single') {
-          sgTasks = SENSES.map(function (s, i) {
-            return { type: 'single', senseIndex: i, label: s.emoji + ' ' + s.name, desc: s.desc };
-          });
-        } else if (mode === 'pair') {
-          sgTasks = PAIRS.map(function (p) {
-            return { type: 'pair', senseIndices: p.senses, label: p.label, desc: p.desc };
-          });
-        } else {
-          sgTasks = TRIPLES.map(function (t) {
-            return { type: 'triple', senseIndices: t.senses, label: t.label, desc: t.desc };
-          });
-        }
+        gameNameEl.textContent = '感受世界';
+        gameDescEl.textContent = '选择你想感受的感官（可多选），然后开始练习。';
 
-        renderSensoryGrid();
-        sgStartTask(0);
+        renderSenseSelect();
       }
 
-      // ── 渲染感官网格 + 计时区 ────────────────
-      function renderSensoryGrid() {
-        // 感官网格
-        var gridHtml = '<div class="sg-senses">';
+      // ── 渲染感官选择界面 ─────────────────────
+      function renderSenseSelect() {
+        var html = '<div class="zm-sense-select">';
+        html += '<p class="zm-sense-select-hint">点击选择感官（可多选）</p>';
+        html += '<div class="zm-senses-grid">';
+
         SENSES.forEach(function (s, i) {
-          var cls = 'sg-sense';
-          gridHtml +=
-            '<div class="' + cls + '" data-index="' + i + '">' +
-              '<span class="sg-sense-emoji">' + s.emoji + '</span>' +
-              '<span class="sg-sense-name">' + s.name + '</span>' +
-              '<span class="sg-sense-check"></span>' +
-            '</div>';
+          html += '<div class="zm-sense-item" data-index="' + i + '">';
+          html += '  <span class="zm-sense-emoji">' + s.emoji + '</span>';
+          html += '  <span class="zm-sense-name">' + s.name + '</span>';
+          html += '  <span class="zm-sense-check">✓</span>';
+          html += '</div>';
         });
-        gridHtml += '</div>';
 
-        // 当前任务
-        gridHtml +=
-          '<div class="sg-current">' +
-            '<div class="sg-current-label">当前</div>' +
-            '<div class="sg-current-sense" id="sgCurrentSense"></div>' +
-            '<div class="sg-current-mode-name" id="sgCurrentModeName"></div>' +
-            '<div class="sg-current-desc" id="sgCurrentDesc"></div>' +
-            '<div class="sg-timer-bar-wrap">' +
-              '<div class="sg-timer-bar-fill" id="sgTimerFill"></div>' +
-            '</div>' +
-            '<div class="sg-timer-text" id="sgTimerText">15s</div>' +
-            '<div class="sg-controls">' +
-              '<button class="sg-skip-btn" id="sgSkipBtn">跳过剩余时间</button>' +
-            '</div>' +
-          '</div>';
+        html += '</div>';
+        html += '<button class="zm-start-btn" id="zmStartBtn" disabled>开始练习</button>';
+        html += '<button class="zm-back-btn" id="zmBackBtn">返回选关</button>';
+        html += '</div>';
 
-        // 进度（用已有样式）
-        var progressHtml = '<div class="q-progress" style="border-bottom:none;margin-bottom:0;padding-bottom:0">';
-        progressHtml += '<div class="q-progress-dots">';
-        for (var i = 0; i < sgTasks.length; i++) {
-          var cls = 'q-dot' + (i === sgCurrentTask ? ' active' : '');
-          progressHtml += '<span class="' + cls + '"></span>';
-        }
-        progressHtml += '</div></div>';
+        questionsWrap.innerHTML = html;
 
-        questionsWrap.innerHTML = progressHtml + gridHtml;
+        // 绑定感官选择
+        var selectedSenses = [];
+        questionsWrap.querySelectorAll('.zm-sense-item').forEach(function (item) {
+          item.addEventListener('click', function () {
+            var idx = parseInt(this.dataset.index);
+            var pos = selectedSenses.indexOf(idx);
+            if (pos === -1) {
+              selectedSenses.push(idx);
+              this.classList.add('selected');
+            } else {
+              selectedSenses.splice(pos, 1);
+              this.classList.remove('selected');
+            }
+
+            // 更新开始按钮状态
+            document.getElementById('zmStartBtn').disabled = selectedSenses.length === 0;
+          });
+        });
+
+        // 开始按钮
+        document.getElementById('zmStartBtn').addEventListener('click', function () {
+          if (selectedSenses.length > 0) {
+            startSensePractice(selectedSenses);
+          }
+        });
+
+        // 返回按钮
+        document.getElementById('zmBackBtn').addEventListener('click', function () {
+          renderZenMapLevels();
+        });
       }
 
-      // ── 开始第 index 个任务 ──────────────────
-      function sgStartTask(index) {
-        if (index >= sgTasks.length) {
-          sgFinish();
-          return;
-        }
+      // ── 开始感官练习 ─────────────────────────
+      function startSensePractice(senseIndices) {
+        zmRunning = true;
+        zmRemaining = TIMER_SEC;
 
-        sgCurrentTask = index;
-        sgRunning = true;
-        sgRemaining = TIMER_SEC;
+        var html = '<div class="zm-practice">';
+        html += '<div class="zm-practice-header">';
+        html += '  <div class="zm-practice-title">感受中…</div>';
+        html += '  <div class="zm-practice-timer" id="zmTimer">' + TIMER_SEC + 's</div>';
+        html += '</div>';
+        html += '<div class="zm-timer-bar-wrap">';
+        html += '  <div class="zm-timer-bar-fill" id="zmTimerFill"></div>';
+        html += '</div>';
+        html += '<div class="zm-current-senses" id="zmCurrentSenses">';
 
-        var task = sgTasks[index];
-
-        // 更新感官网格状态
-        var senseEls = document.querySelectorAll('.sg-sense');
-        senseEls.forEach(function (el) {
-          el.classList.remove('active');
+        senseIndices.forEach(function (idx) {
+          var s = SENSES[idx];
+          html += '<div class="zm-current-sense">' + s.emoji + ' ' + s.name + '</div>';
         });
 
-        // 更新当前任务显示
-        var senseText = '';
-        if (task.type === 'single') {
-          var s = SENSES[task.senseIndex];
-          senseText = s.emoji + ' ' + s.name;
-          document.getElementById('sgCurrentModeName').textContent = '';
-          senseEls[task.senseIndex].classList.add('active');
-        } else {
-          senseText = task.label;
-          document.getElementById('sgCurrentModeName').textContent =
-            sgMode === 'pair' ? '两两组合' : '三三组合';
-          task.senseIndices.forEach(function (idx) {
-            if (senseEls[idx]) senseEls[idx].classList.add('active');
-          });
-        }
+        html += '</div>';
+        html += '<div class="zm-practice-desc" id="zmPracticeDesc">把注意力带到这些感官上，静静感受…</div>';
+        html += '<button class="zm-skip-btn" id="zmSkipBtn">跳过</button>';
+        html += '</div>';
 
-        document.getElementById('sgCurrentSense').textContent = senseText;
-        document.getElementById('sgCurrentDesc').textContent = task.desc;
+        questionsWrap.innerHTML = html;
 
-        // 更新进度
-        updateSensoryProgress();
-
-        // 重置计时器显示
-        document.getElementById('sgTimerFill').style.width = '100%';
-        document.getElementById('sgTimerText').textContent = TIMER_SEC + 's';
-
-        // 清除旧计时器
-        if (sgTimer) {
-          clearInterval(sgTimer);
-          sgTimer = null;
-        }
-
-        // 启动新计时器
-        sgTimer = setInterval(function () {
-          sgRemaining--;
-          if (sgRemaining <= 0) {
-            clearInterval(sgTimer);
-            sgTimer = null;
-            sgCompleteTask();
+        // 启动计时器
+        zmTimer = setInterval(function () {
+          zmRemaining--;
+          if (zmRemaining <= 0) {
+            clearInterval(zmTimer);
+            zmTimer = null;
+            completeSensePractice(senseIndices);
           } else {
-            var pct = (sgRemaining / TIMER_SEC) * 100;
-            document.getElementById('sgTimerFill').style.width = pct + '%';
-            document.getElementById('sgTimerText').textContent = sgRemaining + 's';
+            var pct = (zmRemaining / TIMER_SEC) * 100;
+            document.getElementById('zmTimerFill').style.width = pct + '%';
+            document.getElementById('zmTimer').textContent = zmRemaining + 's';
           }
         }, 1000);
 
         // 跳过按钮
-        var skipBtn = document.getElementById('sgSkipBtn');
-
-        // 先解绑旧监听器（替换副本）
-        var newSkip = skipBtn.cloneNode(true);
-        skipBtn.parentNode.replaceChild(newSkip, skipBtn);
-        newSkip.addEventListener('click', function () {
-          if (sgRunning && sgTimer) {
-            clearInterval(sgTimer);
-            sgTimer = null;
-            sgCompleteTask();
+        document.getElementById('zmSkipBtn').addEventListener('click', function () {
+          if (zmRunning && zmTimer) {
+            clearInterval(zmTimer);
+            zmTimer = null;
+            completeSensePractice(senseIndices);
           }
         });
       }
 
-      // ── 完成当前任务 ─────────────────────────
-      function sgCompleteTask() {
-        sgRunning = false;
+      // ── 完成感官练习 ─────────────────────────
+      function completeSensePractice(senseIndices) {
+        zmRunning = false;
 
-        var task = sgTasks[sgCurrentTask];
-
-        // 标记已完成的感官
-        if (task.type === 'single') {
-          if (sgCompleted.indexOf(task.senseIndex) === -1) {
-            sgCompleted.push(task.senseIndex);
+        // 收集卡片
+        senseIndices.forEach(function (idx) {
+          if (zmCollectedCards.indexOf(idx) === -1) {
+            zmCollectedCards.push(idx);
           }
-          var el = document.querySelector('.sg-sense[data-index="' + task.senseIndex + '"]');
-          if (el) {
-            el.classList.remove('active');
-            el.classList.add('done');
-            el.querySelector('.sg-sense-check').textContent = '✓';
-          }
-        } else {
-          task.senseIndices.forEach(function (idx) {
-            if (sgCompleted.indexOf(idx) === -1) {
-              sgCompleted.push(idx);
-            }
-            var el = document.querySelector('.sg-sense[data-index="' + idx + '"]');
-            if (el) {
-              el.classList.remove('active');
-              el.classList.add('done');
-              el.querySelector('.sg-sense-check').textContent = '✓';
-            }
-          });
-        }
-
-        // 更新进度
-        updateSensoryProgress();
+        });
 
         // 震动
         try { navigator.vibrate(50); } catch(e) {}
 
-        // 更新计时显示
-        document.getElementById('sgTimerText').textContent = '✓';
+        // 显示完成界面
+        var html = '<div class="zm-complete">';
+        html += '<div class="zm-complete-icon">✨</div>';
+        html += '<div class="zm-complete-title">感受完成</div>';
+        html += '<div class="zm-complete-desc">你把注意力带回了身体，这就是修行的开始。</div>';
+        html += '<div class="zm-cards-collected">';
+        html += '<h4 class="zm-cards-title">已收集卡片</h4>';
+        html += '<div class="zm-cards-grid" id="zmCardsGrid">';
 
-        // 自动进下一个
-        setTimeout(function () {
-          sgStartTask(sgCurrentTask + 1);
-        }, 600);
-      }
-
-      // ── 更新进度 ─────────────────────────────
-      function updateSensoryProgress() {
-        var dots = document.querySelectorAll('.q-progress-dots .q-dot');
-        if (!dots.length) return;
-        dots.forEach(function (d, i) {
-          d.className = 'q-dot';
-          if (i < sgCurrentTask) d.classList.add('done');
-          if (i === sgCurrentTask) d.classList.add('active');
-        });
-      }
-
-      // ── 完成 ─────────────────────────────────
-      function sgFinish() {
-        if (sgTimer) {
-          clearInterval(sgTimer);
-          sgTimer = null;
-        }
-
-        var desc = '';
-        var modeLabel = '个感官';
-        if (sgMode === 'single') modeLabel = '个感官逐个打卡完成';
-        else if (sgMode === 'pair') modeLabel = '组两两组合完成';
-        else modeLabel = '组三三组合完成';
-
-        // 收集完成总结
-        var summaryHtml = '';
-        sgCompleted.forEach(function (idx) {
+        zmCollectedCards.forEach(function (idx) {
           var s = SENSES[idx];
-          summaryHtml += '<span class="sg-complete-sense">' + s.emoji + ' ' + s.name + '</span>';
+          html += '<div class="zm-card">';
+          html += '  <span class="zm-card-emoji">' + s.emoji + '</span>';
+          html += '  <span class="zm-card-name">' + s.name + '</span>';
+          html += '</div>';
         });
 
-        questionsWrap.innerHTML =
-          '<div class="sg-complete">' +
-            '<div class="sg-complete-icon">🧘</div>' +
-            '<div class="sg-complete-title">' + sgTasks.length + ' ' + modeLabel + '</div>' +
-            '<div class="sg-complete-desc">你把注意力带回了身体，这就是修行的开始。</div>' +
-            '<div class="sg-complete-summary">' + summaryHtml + '</div>' +
-            '<button class="sg-restart-btn" id="sgRestartBtn">再来一次</button>' +
-          '</div>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="zm-complete-actions">';
+        html += '  <button class="zm-continue-btn" id="zmContinueBtn">继续练习</button>';
+        html += '  <button class="zm-finish-btn" id="zmFinishBtn">返回选关</button>';
+        html += '</div>';
+        html += '</div>';
 
-        document.getElementById('sgRestartBtn').addEventListener('click', function () {
-          renderSensoryModeSelect();
+        questionsWrap.innerHTML = html;
+
+        // 继续练习按钮
+        document.getElementById('zmContinueBtn').addEventListener('click', function () {
+          renderSenseSelect();
+        });
+
+        // 返回选关按钮
+        document.getElementById('zmFinishBtn').addEventListener('click', function () {
+          renderZenMapLevels();
         });
       }
 
