@@ -581,12 +581,13 @@
       function completeSensePractice(senseIndices) {
         zmRunning = false;
 
-        // 收集卡片
-        senseIndices.forEach(function (idx) {
-          if (zmCollectedCards.indexOf(idx) === -1) {
-            zmCollectedCards.push(idx);
-          }
+        // 收集卡片（整个组合作为一张卡片）
+        var already = zmCollectedCards.some(function (combo) {
+          return combo.length === senseIndices.length && combo.every(function (v, i) { return v === senseIndices[i]; });
         });
+        if (!already) {
+          zmCollectedCards.push(senseIndices.slice()); // 复制数组
+        }
 
         // 震动
         try { navigator.vibrate(50); } catch(e) {}
@@ -600,11 +601,12 @@
         html += '<h4 class="zm-cards-title">已收集卡片</h4>';
         html += '<div class="zm-cards-grid" id="zmCardsGrid">';
 
-        zmCollectedCards.forEach(function (idx) {
-          var s = SENSES[idx];
+        zmCollectedCards.forEach(function (combo) {
+          var emojiStr = combo.map(function (idx) { return SENSES[idx].emoji; }).join(' ');
+          var nameStr = combo.map(function (idx) { return SENSES[idx].name; }).join('+');
           html += '<div class="zm-card">';
-          html += '  <span class="zm-card-emoji">' + s.emoji + '</span>';
-          html += '  <span class="zm-card-name">' + s.name + '</span>';
+          html += '  <span class="zm-card-emoji">' + emojiStr + '</span>';
+          html += '  <span class="zm-card-name">' + nameStr + '</span>';
           html += '</div>';
         });
 
